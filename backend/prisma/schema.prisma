@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  twitchId      String   @unique
+  username      String
+  displayName   String
+  profileImage  String?
+  isAdmin       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  votes         Vote[]
+  logs          Log[]
+
+  @@map("users")
+}
+
+model Movie {
+  id          String   @id @default(cuid())
+  title       String
+  year        Int
+  category    String
+  poster      String?
+  description String?
+  voteCount   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  votes       Vote[]
+  logs        Log[]
+
+  @@map("movies")
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  movieId   String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@map("votes")
+}
+
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], name: "IDX_session_expire")
+  @@map("session")
+}
+
+// Ações possíveis:
+// VOTE         — usuário votou em um filme
+// VOTE_RETURN  — votos de um usuário foram devolvidos pelo admin
+// MOVIE_ADD    — filme adicionado pelo admin
+// MOVIE_REMOVE — filme removido pelo admin
+// MOVIE_EDIT   — filme editado pelo admin
+// RESET_ALL    — todos os votos zerados pelo admin
+// RESET_MOVIE  — votos de um filme zerados pelo admin
+
+model Log {
+  id        String   @id @default(cuid())
+  action    String
+  userId    String?
+  movieId   String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  movie     Movie?   @relation(fields: [movieId], references: [id], onDelete: SetNull)
+
+  @@index([action])
+  @@index([createdAt(sort: Desc)])
+  @@map("logs")
+}

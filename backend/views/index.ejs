@@ -1,0 +1,224 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<% if (error) { %>
+<div class="alert-banner">
+  <% if (error === 'auth') { %> Você precisa estar logado para votar.
+  <% } else if (error === 'twitch_denied') { %> Login cancelado.
+  <% } else if (error === 'oauth_failed') { %> Erro ao conectar com a Twitch. Tente novamente.
+  <% } else { %> Ocorreu um erro. Tente novamente.
+  <% } %>
+  <button onclick="this.parentElement.remove()" class="alert-close">✕</button>
+</div>
+<% } %>
+
+<section class="hero">
+  <h1>VOTE NO SEU<br><em>FILME FAVORITO</em></h1>
+  <p>Conecte sua conta Twitch e vote nos filmes que você quer ver na live.</p>
+  <div class="live-count">
+    <span class="live-dot"></span>
+    <span id="totalVotesDisplay"><%= total.toLocaleString('pt-BR') %> votos registrados</span>
+  </div>
+</section>
+
+<div class="filters">
+  <span class="filter-label">Categoria</span>
+  <%
+    const catLabels = {
+      todos: 'Todos',
+      acao: '⚔️ Ação',
+      comedia: '😂 Comédia',
+      terror: '👻 Terror',
+      drama: '🎭 Drama',
+      ficcao: '🚀 Ficção Científica',
+      animacao: '🎨 Animação'
+    };
+  %>
+  <% categories.forEach(cat => { %>
+    <a href="/?category=<%= cat %>" class="chip <%= activeCategory === cat ? 'active' : '' %>">
+      <%= catLabels[cat] || cat %>
+    </a>
+  <% }) %>
+</div>
+
+<div class="grid" id="movieGrid">
+  <% if (movies.length === 0) { %>
+    <div class="empty">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+      <p>Nenhum filme nessa categoria meu Relíkia.</p>
+    </div>
+  <% } %>
+
+  <% movies.forEach((movie, i) => { %>
+    <%
+      const catLabel = catLabels[movie.category] || movie.category;
+    %>
+    <div class="card" style="animation-delay:<%= i * 0.05 %>s">
+      <div class="card-poster">
+        <img
+          src="<%= movie.poster || 'https://placehold.co/500x281/1c1e27/6b7080?text=Sem+Poster' %>"
+          alt="<%= movie.title %>"
+          loading="lazy"
+          onerror="this.src='https://placehold.co/500x281/1c1e27/6b7080?text=Sem+Poster'"
+        >
+        <span class="card-rank">#<%= movie.rank %></span>
+        <span class="card-badge"><%= catLabel %></span>
+      </div>
+      <div class="card-body">
+        <div class="card-title"><%= movie.title %></div>
+                <div class="card-description"><%= movie.description %></div>
+        <div class="card-meta"><%= movie.year %></div>
+        <div class="progress-wrap">
+          <div class="progress-info">
+            <span class="vote-count"><%= movie.voteCount.toLocaleString('pt-BR') %> votos</span>
+            <span class="vote-pct"><%= movie.pct %>%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill <%= movie.rankClass %>" style="width:<%= movie.barW %>%"></div>
+          </div>
+        </div>
+
+        <% if (!user) { %>
+          <a href="/auth/twitch" class="btn-vote">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            Votar
+          </a>
+        <% } else if (movie.hasVoted) { %>
+          <button class="btn-vote voted" disabled>
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Votado!
+          </button>
+        <% } else { %>
+          <button
+            class="btn-vote"
+            data-movie-id="<%= movie.id %>"
+            data-movie-title="<%= movie.title %>"
+          >
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            Votar
+          </button>
+        <% } %>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="toast-dot" id="toastDot"></span>
+  <span id="toastMsg"></span>
+</div>
+
+<!-- Modal Regras -->
+<div class="modal-overlay" id="rulesModal">
+  <div class="rules-modal">
+    <div class="rules-header">
+      <div>
+        <span class="rules-tag">REGULAMENTO</span>
+        <h2>Regras da Votação</h2>
+      </div>
+      <button class="rules-close" id="btnCloseRules">Fechar</button>
+    </div>
+    <div class="rules-body">
+
+      <div class="rules-chapter">
+        <div class="rules-chapter-title">CAPÍTULO I — INDICAÇÕES DOS FILMES(leia com atêncão)</div>
+        <div class="rules-article-title">Art. 1º - Das Indicações para Votação</div>
+        <ol>
+          <li>I - A indicação de filmes com duração de até 2h30min para votação no site deverá ser realizada mediante contribuição mínima de R$ 6,00;</li>
+          <li>II - A indicação de filmes com duração superior a 2h30min deverá ser realizada mediante contribuição mínima de R$ 12,00;</li>
+          <li>III - As enquetes realizadas na Twitch conterão sempre os 3 filmes mais votados dentro do gênero especificado pelo streamer.</li>
+        </ol>
+      </div>
+
+      <div class="rules-chapter">
+        <div class="rules-chapter-title">CAPÍTULO I — INDICAÇÕES DOS FILMES</div>
+        <div class="rules-article-title">Art. 2º - Da Revotação</div>
+        <ol>
+          <li>I - A revotação poderá ser adquirida mediante contribuição de R$ 150,00, garantindo ao comprador o direito de adicionar diretamente um filme à enquete, independentemente da votação do site;</li>
+          <li>II - Caso o filme indicado por revotação não seja vencedor da enquete, este será automaticamente direcionado para a lista oficial de votação do site.</li>
+        </ol>
+      </div>
+
+      <div class="rules-chapter">
+        <div class="rules-chapter-title">CAPÍTULO I — INDICAÇÕES DOS FILMES</div>
+        <div class="rules-article-title">Art. 3º - Do Empate na Enquete</div>
+        <p>Em caso de empate nas enquetes da Twitch, será instaurada uma Roleta Beneficente de Desempate, na qual:</p>
+        <ol>
+          <li>I - Cada ticket custará R$ 2,00;</li>
+          <li>II - O filme vencedor será definido conforme o resultado da roleta.</li>
+        </ol>
+      </div>
+
+      <div class="rules-chapter">
+        <div class="rules-chapter-title">CAPÍTULO I — INDICAÇÕES DOS FILMES</div>
+        <div class="rules-article-title">Art. 4º - Da Renovação das Indicações</div>
+        <ol>
+          <li>I - Nos dias 15 e 30 de cada mês, todas as indicações presentes no site serão zeradas;</li>
+          <li>II – O objetivo da renovação será permitir novas disputas e oportunidades para diferentes filmes;</li>
+          <li>III – Filmes anteriormente indicados poderão retornar à votação, porém reiniciarão com 0 votos.
+          </li>
+        </ol>
+      </div>
+      
+      <div class="rules-chapter">
+        <div class="rules-chapter-title">CAPÍTULO II — PROIBICÕES E LIMITACÕES</div>
+        <div class="rules-article-title">Art. 5º - Dos Filmes Abaixo dos Anos 2000</div>
+        <p>Filmes lançados antes do ano 2000 somente serão elegíveis para enquete caso:</p>
+        <ol>
+          <li>I - Possuam mais de 200 votos no site;</li>
+          <li>II - Estejam posicionados dentro do Top 3 da votação.
+          </li>
+        </ol>
+      </div>
+      
+      <div class="rules-chapter">
+        <div class="rules-chapter-title">CAPÍTULO II — PROIBICÕES E LIMITAÇÕES</div>
+        <div class="rules-article-title">Art. 6º - Dos Musicais
+          Filmes do gênero musical somente estão proibidos
+         </div>
+        <div class="rules-article-title">Art. 7º - Dos Filmes de Otaku
+           Filmes considerados “de otaku” somente serão elegíveis para enquete caso:
+        </div>
+        <ol>
+          <li>
+            I – Possuam mais de 200 votos;
+          </li>
+          <li>
+            II – Recebam aprovação expressa dos streamers.
+          </li>
+        </ol>
+        <div>
+            Art. 8º – Das Obras Proibidas
+Fica terminantemente proibida a indicação de:
+          </div>
+          <ol>
+            <li>
+              I - Series
+            </li>
+            <li>
+              II - Animes Seriados
+            </li>
+          </ol>
+      </div>
+      
+      <div class="rules-chapter">
+        <div class="rules-chapter-title">CAPÍTULO II — PROIBIÇÕES E LIMiTAÇÕES</div>
+        <div class="rules-article-title">Art. 9º – Das Sequências
+          As sequências de filmes não poderão ser assistidas no mesmo dia da obra anterior, salvo exceções determinadas pelos streamers.</div>
+      </div>
+      
+      
+      <div class="rules-chapter">
+        <div class="rules-chapter-title">CAPÍTULO III — DISPOSICOES FINAIS</div>
+        <div class="rules-article-title">Art. 10º – Da Autoridade Suprema dos Streamers
+          Os streamers poderão alterar, suspender, ignorar ou reinterpretar quaisquer regras previstas neste regulamento sempre que julgarem necessário.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

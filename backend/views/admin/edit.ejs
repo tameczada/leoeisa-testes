@@ -1,0 +1,273 @@
+<%- include('../partials/head') %>
+<link rel="stylesheet" href="/css/admin.css">
+<%- include('../partials/header') %>
+
+<div class="admin-wrapper">
+  <div class="admin-sidebar">
+    <nav class="admin-nav">
+      <a href="/admin?tab=overview" class="admin-nav-item">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Visão Geral
+      </a>
+      <a href="/admin?tab=movies" class="admin-nav-item active">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"/></svg>
+        Filmes
+      </a>
+      <a href="/admin?tab=add" class="admin-nav-item">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Adicionar Filme
+      </a>
+      <a href="/" class="admin-nav-item admin-nav-back">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Voltar ao Site
+      </a>
+    </nav>
+  </div>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="admin-topbar-left">
+        <span class="admin-badge">Admin</span>
+        <h1>Editar Filme</h1>
+      </div>
+      <a href="/admin?tab=movies" class="btn-ghost btn-sm">← Voltar à lista</a>
+    </div>
+
+    <% if (flash) { %>
+    <div class="alert-banner <%= flash.type === 'error' ? 'alert-error' : 'alert-success' %>" id="flashBanner">
+      <%= flash.message %>
+      <button onclick="this.parentElement.remove()" class="alert-close">✕</button>
+    </div>
+    <% } %>
+
+    <form id="editMovieForm" enctype="multipart/form-data">
+      <input type="hidden" name="movieId" value="<%= movie.id %>">
+
+      <div class="form-grid">
+        <div class="form-group form-full">
+          <label>Título *</label>
+          <input class="form-input" name="title" required value="<%= movie.title %>" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label>Ano *</label>
+          <input class="form-input" name="year" type="number" value="<%= movie.year %>" min="1900" max="2099" required>
+        </div>
+
+        <div class="form-group">
+          <label>Categoria *</label>
+          <select class="form-select" name="category" required>
+            <option value="acao"    <%= movie.category === 'acao'    ? 'selected' : '' %>>⚔️ Ação</option>
+            <option value="comedia" <%= movie.category === 'comedia' ? 'selected' : '' %>>😂 Comédia</option>
+            <option value="terror"  <%= movie.category === 'terror'  ? 'selected' : '' %>>👻 Terror</option>
+            <option value="drama"   <%= movie.category === 'drama'   ? 'selected' : '' %>>🎭 Drama</option>
+            <option value="ficcao"  <%= movie.category === 'ficcao'  ? 'selected' : '' %>>🚀 Ficção Científica</option>
+            <option value="animacao"<%= movie.category === 'animacao'? 'selected' : '' %>>🎨 Animação</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Votos Atuais</label>
+          <input class="form-input" name="voteCount" type="number" value="<%= movie.voteCount %>" min="0">
+        </div>
+
+        <div class="form-group">
+          <label>Status</label>
+          <select class="form-select" name="active">
+            <option value="true"  <%= movie.active ? 'selected' : '' %>>✅ Ativo (visível no site)</option>
+            <option value="false" <%= !movie.active ? 'selected' : '' %>>🚫 Inativo (oculto)</option>
+          </select>
+        </div>
+
+        <div class="form-group form-full">
+          <label>Descrição (opcional)</label>
+          <textarea class="form-input form-textarea" name="description"><%= movie.description || '' %></textarea>
+        </div>
+
+        <!-- Current poster -->
+        <div class="form-group form-full">
+          <label>Imagem atual</label>
+          <div class="current-poster-wrap">
+            <img
+              id="currentPosterImg"
+              src="<%= movie.poster || 'https://placehold.co/500x281/1c1e27/6b7080?text=Sem+Poster' %>"
+              alt="Poster atual"
+              onerror="this.src='https://placehold.co/500x281/1c1e27/6b7080?text=Sem+Poster'"
+            >
+            <div class="current-poster-info">
+              <% if (movie.poster) { %>
+                <span class="poster-url-label"><%= movie.poster.startsWith('/uploads/') ? '📁 Arquivo local' : '🔗 URL externa' %></span>
+              <% } else { %>
+                <span class="poster-url-label" style="color:var(--muted)">Nenhuma imagem definida</span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- New poster upload -->
+        <div class="form-group form-full">
+          <label>Substituir imagem — Enviar arquivo</label>
+          <div class="img-upload-area" id="imgUploadArea">
+            <input type="file" name="poster" id="fImgFile" accept="image/*">
+            <img id="imgPreview" class="img-preview" alt="preview" style="display:none">
+            <div id="imgPlaceholder">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="28" height="28" style="color:var(--muted);margin-bottom:.3rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <div style="font-size:.8rem;color:var(--muted)"><strong style="color:var(--twitch)">Clique ou arraste</strong> para substituir · PNG, JPG, WEBP · max 5MB</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group form-full">
+          <label>Ou substitua com URL</label>
+          <div style="display:flex;gap:.5rem;">
+            <input class="form-input" id="posterUrlInput" name="posterUrl" placeholder="https://..." value="<%= (movie.poster && !movie.poster.startsWith('/uploads/')) ? movie.poster : '' %>" autocomplete="off">
+            <button type="button" class="btn-ghost btn-sm" onclick="applyUrl()">Prévia</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger zone inside form -->
+      <div class="edit-danger-zone">
+        <div class="section-title" style="margin-top:2rem;">Zona de Perigo</div>
+        <div class="action-row">
+          <button type="button" class="btn-danger" onclick="resetThisVotes('<%= movie.id %>','<%= movie.title %>')">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Zerar votos deste filme
+          </button>
+          <button type="button" class="btn-danger" onclick="deleteThisMovie('<%= movie.id %>','<%= movie.title %>')">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Apagar este filme
+          </button>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a href="/admin?tab=movies" class="btn-cancel">Cancelar</a>
+        <button type="submit" class="btn-primary" id="saveBtn">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          Salvar Alterações
+        </button>
+      </div>
+    </form>
+  </main>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-icon danger">
+      <svg fill="none" viewBox="0 0 24 24" stroke="#e74c3c" width="26" height="26"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    </div>
+    <h2 id="confirmTitle">Confirmar</h2>
+    <p id="confirmMsg"></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn-danger" id="confirmOkBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="toast-dot" id="toastDot"></span><span id="toastMsg"></span></div>
+
+<style>
+.current-poster-wrap {
+  display: flex; align-items: flex-start; gap: 1rem;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: .75rem; overflow: hidden;
+}
+.current-poster-wrap img {
+  width: 160px; height: 90px; object-fit: cover; border-radius: 8px; flex-shrink: 0;
+}
+.current-poster-info { display: flex; flex-direction: column; justify-content: center; gap: .4rem; }
+.poster-url-label { font-size: .8rem; color: var(--muted); }
+.alert-success { background: rgba(46,204,113,.12); border-bottom: 1px solid rgba(46,204,113,.3); color: var(--green); }
+.alert-error   { background: rgba(231,76,60,.12);  border-bottom: 1px solid rgba(231,76,60,.3);  color: var(--red); }
+</style>
+
+<script src="/js/admin.js"></script>
+<script>
+// ── Edit-specific logic ──
+const movieId = '<%= movie.id %>';
+const form = document.getElementById('editMovieForm');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+
+  try {
+    const fd = new FormData(form);
+    // If no new file chosen, drop the empty file field
+    const fileInput = document.getElementById('fImgFile');
+    if (!fileInput.files[0]) fd.delete('poster');
+
+    const res = await fetch(`/api/admin/movies/${movieId}`, {
+      method: 'PUT', credentials: 'same-origin', body: fd,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao salvar');
+
+    showToast(`"${data.title}" atualizado!`);
+    // Refresh poster preview if it changed
+    if (data.poster) {
+      document.getElementById('currentPosterImg').src = data.poster;
+    }
+    setTimeout(() => { window.location.href = '/admin?tab=movies'; }, 1200);
+  } catch (err) {
+    showToast(err.message, 'err');
+    btn.disabled = false; btn.textContent = 'Salvar Alterações';
+  }
+});
+
+function resetThisVotes(id, title) {
+  showConfirm('Zerar Votos', `Zerar todos os votos de "${title}"?`, async () => {
+    const res = await fetch(`/api/admin/movies/${id}/reset-votes`, { method: 'POST', credentials: 'same-origin' });
+    if (res.ok) { showToast('Votos zerados.', 'warn'); document.querySelector('[name=voteCount]').value = '0'; }
+    else showToast('Erro ao zerar votos.', 'err');
+  });
+}
+
+function deleteThisMovie(id, title) {
+  showConfirm('Apagar Filme', `Apagar "${title}" permanentemente?`, async () => {
+    const res = await fetch(`/api/admin/movies/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+    if (res.ok) { showToast('Filme apagado.', 'warn'); setTimeout(() => { window.location.href = '/admin?tab=movies'; }, 1000); }
+    else showToast('Erro ao apagar.', 'err');
+  });
+}
+
+function applyUrl() {
+  const url = document.getElementById('posterUrlInput').value.trim();
+  if (!url) return;
+  document.getElementById('currentPosterImg').src = url;
+  document.getElementById('fImgFile').value = '';
+}
+
+// File preview
+document.getElementById('fImgFile').addEventListener('change', (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  if (file.size > 5*1024*1024) { showToast('Arquivo muito grande (max 5MB).', 'err'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const p = document.getElementById('imgPreview');
+    const ph = document.getElementById('imgPlaceholder');
+    p.src = ev.target.result; p.style.display = 'block';
+    if (ph) ph.style.display = 'none';
+    document.getElementById('currentPosterImg').src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// Drag-drop
+const area = document.getElementById('imgUploadArea');
+area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('drag'); });
+area.addEventListener('dragleave', () => area.classList.remove('drag'));
+area.addEventListener('drop', e => {
+  e.preventDefault(); area.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  const dt = new DataTransfer(); dt.items.add(file);
+  document.getElementById('fImgFile').files = dt.files;
+  document.getElementById('fImgFile').dispatchEvent(new Event('change'));
+});
+</script>
+</body></html>

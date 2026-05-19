@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+node_modules
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+.next/
+
+# Environment
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# Prisma
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+
+# Uploads (user content — store in S3/Cloudinary in production)
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# TypeScript
+*.tsbuildinfo

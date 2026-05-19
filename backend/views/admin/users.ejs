@@ -1,0 +1,157 @@
+<%- include('../partials/head') %>
+<link rel="stylesheet" href="/css/admin.css">
+<%- include('../partials/header') %>
+
+<div class="admin-wrapper">
+  <div class="admin-sidebar">
+    <nav class="admin-nav">
+      <a href="/admin?tab=overview" class="admin-nav-item">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Visão Geral
+      </a>
+      <a href="/admin?tab=movies" class="admin-nav-item">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"/></svg>
+        Filmes
+      </a>
+      <a href="/admin/users" class="admin-nav-item active">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        Usuários
+      </a>
+      <a href="/" class="admin-nav-item admin-nav-back">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Voltar ao Site
+      </a>
+    </nav>
+  </div>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="admin-topbar-left">
+        <span class="admin-badge">Admin</span>
+        <h1>Usuários (<%= users.length %>)</h1>
+      </div>
+    </div>
+
+    <div class="search-wrap" style="margin-bottom:1rem;">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input class="search-input" id="userSearch" placeholder="Buscar usuário..." autocomplete="off">
+    </div>
+
+    <div class="movie-list" id="userListContainer">
+      <% users.forEach(u => { %>
+      <div class="movie-row" style="grid-template-columns:40px 1fr auto;" id="urow-<%= u.id %>">
+        <% if (u.profileImage) { %>
+          <img src="<%= u.profileImage %>" alt="<%= u.displayName %>" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(<%= u.isAdmin ? '--admin' : '--border' %>);">
+        <% } else { %>
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--surface3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;"><%= u.displayName.charAt(0) %></div>
+        <% } %>
+        <div>
+          <div class="movie-row-title">
+            <%= u.displayName %>
+            <% if (u.isAdmin) { %><span class="admin-badge" style="margin-left:.4rem;font-size:.62rem;">ADMIN</span><% } %>
+          </div>
+          <div class="movie-row-sub">
+            @<%= u.username %> · <%= u._count.votes %> voto<%= u._count.votes !== 1 ? 's' : '' %> · entrou <%= new Date(u.createdAt).toLocaleDateString('pt-BR') %>
+          </div>
+        </div>
+        <div class="movie-actions">
+          <% if (u._count.votes > 0) { %>
+          <button class="btn-danger btn-sm" 
+            data-action="reset-user-votes"
+            data-id="<%= u.id %>"
+            data-name="<%= u.displayName %>"
+            data-count="<%= u._count.votes %>"
+            id="resetbtn-<%= u.id %>">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Devolver Votos (<%= u._count.votes %>)
+          </button>
+          <% } else { %>
+          <span style="font-size:.75rem;color:var(--muted);padding:.3rem .5rem;">Sem votos</span>
+          <% } %>
+          <% if (!u.isAdmin) { %>
+          <button class="btn-ghost btn-sm"
+            data-action="toggle-admin"
+            data-id="<%= u.id %>"
+            data-name="<%= u.displayName %>"
+            data-make-admin="true">
+            Tornar Admin
+          </button>
+          <% } else { %>
+          <button class="btn-warn btn-sm"
+            data-action="toggle-admin"
+            data-id="<%= u.id %>"
+            data-name="<%= u.displayName %>"
+            data-make-admin="false"
+            style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--admin);">
+            Remover Admin
+          </button>
+          <% } %>
+        </div>
+      </div>
+      <% }) %>
+      <% if (users.length === 0) { %>
+        <p style="color:var(--muted);font-size:.88rem;padding:.5rem 0;">Nenhum usuário cadastrado ainda.</p>
+      <% } %>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"><span class="toast-dot" id="toastDot"></span><span id="toastMsg"></span></div>
+
+<script src="/js/admin.js"></script>
+<script>
+// ── Busca de usuários ──
+const userSearch = document.getElementById("userSearch");
+if (userSearch) {
+  userSearch.addEventListener("input", () => {
+    const q = userSearch.value.toLowerCase().trim();
+    document.querySelectorAll("#userListContainer .movie-row").forEach(row => {
+      const name = row.querySelector(".movie-row-title")?.textContent.toLowerCase() || "";
+      row.style.display = name.includes(q) ? "" : "none";
+    });
+  });
+}
+
+document.addEventListener("click", async (e) => {
+  const resetBtn = e.target.closest("[data-action='reset-user-votes']");
+  const toggleBtn = e.target.closest("[data-action='toggle-admin']");
+
+  if (resetBtn) {
+    const { id, name, count } = resetBtn.dataset;
+    try {
+      const res = await fetch(`/api/admin/users/${id}/reset-votes`, {
+        method: "POST",
+        headers: { "Accept": "application/json" },
+        credentials: "same-origin",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error();
+      showToast(`${data.votesReturned} voto(s) devolvidos para "${name}".`, "warn");
+      resetBtn.outerHTML = `<span style="font-size:.75rem;color:var(--muted);padding:.3rem .5rem;">Sem votos</span>`;
+    } catch {
+      showToast("Erro ao devolver votos.", "err");
+    }
+    return;
+  }
+
+  if (toggleBtn) {
+    const { id, name, makeAdmin } = toggleBtn.dataset;
+    const isAdmin = makeAdmin === "true";
+    try {
+      const res = await fetch(`/api/admin/users/${id}/toggle-admin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ isAdmin }),
+      });
+      if (!res.ok) throw new Error();
+      showToast(`${name} ${isAdmin ? "agora é admin" : "não é mais admin"}.`);
+      setTimeout(() => location.reload(), 1200);
+    } catch {
+      showToast("Erro ao atualizar usuário.", "err");
+    }
+    return;
+  }
+});
+</script>
+</body></html>

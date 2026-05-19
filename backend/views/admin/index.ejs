@@ -1,0 +1,298 @@
+<%- include('../partials/head') %>
+<link rel="stylesheet" href="/css/admin.css">
+<%- include('../partials/header') %>
+
+<div class="admin-wrapper">
+  <div class="admin-sidebar">
+    <nav class="admin-nav">
+      <a href="/admin?tab=overview" class="admin-nav-item <%= activeTab === 'overview' ? 'active' : '' %>">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Visão Geral
+      </a>
+      <a href="/admin?tab=movies" class="admin-nav-item <%= activeTab === 'movies' ? 'active' : '' %>">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"/></svg>
+        Filmes
+      </a>
+      <a href="/admin?tab=add" class="admin-nav-item <%= activeTab === 'add' ? 'active' : '' %>">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Adicionar Filme
+      </a>
+      <a href="/admin/users" class="admin-nav-item">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        Usuários
+      </a>
+      <a href="/admin?tab=settings" class="admin-nav-item <%= activeTab === 'settings' ? 'active' : '' %>">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Configurações
+      </a>
+      <a href="/" class="admin-nav-item admin-nav-back">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Voltar ao Site
+      </a>
+    </nav>
+  </div>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="admin-topbar-left">
+        <span class="admin-badge">Admin</span>
+        <% if (activeTab === 'overview') { %><h1>Visão Geral</h1>
+        <% } else if (activeTab === 'movies') { %><h1>Gerenciar Filmes</h1>
+        <% } else if (activeTab === 'add') { %><h1>Adicionar Filme</h1>
+        <% } else if (activeTab === 'edit') { %><h1>Editar Filme</h1>
+        <% } else if (activeTab === 'settings') { %><h1>Configurações</h1>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- ═══ OVERVIEW ═══ -->
+    <% if (activeTab === 'overview') { %>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--twitch)"><%= movies.filter(m=>m.active).length %></div>
+        <div class="stat-label">Filmes Ativos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--accent)"><%= total.toLocaleString('pt-BR') %></div>
+        <div class="stat-label">Total de Votos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--gold)"><%= movies.length > 0 ? movies[0].voteCount.toLocaleString('pt-BR') : 0 %></div>
+        <div class="stat-label">Votos no 1º Lugar</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--green)"><%= movies.length > 0 ? Math.round(total / movies.filter(m=>m.active).length) : 0 %></div>
+        <div class="stat-label">Média / Filme</div>
+      </div>
+    </div>
+
+    <div class="section-title">Ações Rápidas</div>
+    <div class="action-row">
+      <button class="btn-danger" data-action="reset-all">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Zerar Todos os Votos
+      </button>
+      <a href="/admin?tab=movies" class="btn-ghost">Ver Lista Completa</a>
+      <a href="/admin?tab=add" class="btn-primary">+ Novo Filme</a>
+    </div>
+
+    <div class="section-title">Ranking ao Vivo</div>
+    <div class="movie-list">
+      <% const maxVotes = movies.length > 0 ? Math.max(...movies.map(m=>m.voteCount)) : 0 %>
+      <% movies.forEach((m, i) => { %>
+      <div class="movie-row" id="row-<%= m.id %>">
+        <img class="movie-thumb" src="<%= m.poster || 'https://placehold.co/80x54/1c1e27/6b7080?text=?' %>" onerror="this.src='https://placehold.co/80x54/1c1e27/6b7080?text=?'" alt="">
+        <div class="movie-info">
+          <div class="movie-row-title">#<%= i+1 %> <%= m.title %></div>
+          <div style="display:flex;align-items:center;gap:.5rem;margin-top:.25rem;">
+            <div style="flex:1;max-width:140px;height:4px;background:var(--surface3);border-radius:999px;overflow:hidden;">
+              <div style="height:100%;background:<%= i===0?'var(--gold)':i===1?'var(--green)':'var(--twitch)' %>;width:<%= maxVotes>0?Math.round(m.voteCount/maxVotes*100):0 %>%;border-radius:999px;"></div>
+            </div>
+            <span class="vote-label" id="vcount-<%= m.id %>"><%= m.voteCount.toLocaleString('pt-BR') %> votos</span>
+          </div>
+        </div>
+        <div class="movie-actions">
+          <div class="vote-adj">
+            <button class="vote-btn" data-id="<%= m.id %>" data-title="<%= m.title %>" data-delta="-10">−10</button>
+            <button class="vote-btn" data-id="<%= m.id %>" data-title="<%= m.title %>" data-delta="-1">−</button>
+            <span class="vote-adj-val" id="vadj-<%= m.id %>"><%= m.voteCount %></span>
+            <button class="vote-btn" data-id="<%= m.id %>" data-title="<%= m.title %>" data-delta="1">+</button>
+            <button class="vote-btn" data-id="<%= m.id %>" data-title="<%= m.title %>" data-delta="10">+10</button>
+          </div>
+          <button class="btn-icon" title="Zerar votos" data-action="reset" data-id="<%= m.id %>" data-title="<%= m.title %>">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <!-- ═══ MOVIES LIST ═══ -->
+    <% if (activeTab === 'movies') { %>
+    <div style="display:flex;gap:.7rem;margin-bottom:1rem;align-items:center;flex-wrap:wrap;">
+      <div class="search-wrap">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input class="search-input" id="movieSearch" placeholder="Buscar filme..." autocomplete="off">
+      </div>
+      <a href="/admin?tab=add" class="btn-primary btn-sm" style="margin-left:auto;">+ Novo Filme</a>
+    </div>
+    <div class="movie-list" id="movieListContainer">
+      <% movies.forEach(m => { %>
+      <div class="movie-row" id="row-<%= m.id %>">
+        <img class="movie-thumb" src="<%= m.poster || 'https://placehold.co/80x54/1c1e27/6b7080?text=?' %>" onerror="this.src='https://placehold.co/80x54/1c1e27/6b7080?text=?'" alt="">
+        <div class="movie-info">
+          <div class="movie-row-title"><%= m.title %> <% if (!m.active) { %><span class="badge-inactive">Inativo</span><% } %></div>
+          <div class="movie-row-sub"><%= m.year %> · <%= m.category %> · <span id="vadj-<%= m.id %>"><%= m.voteCount %></span> votos</div>
+        </div>
+        <div class="movie-actions">
+          <div class="vote-adj">
+            <button class="vote-btn" data-id="<%= m.id %>" data-title="<%= m.title %>" data-delta="-10">−10</button>
+            <button class="vote-btn" data-id="<%= m.id %>" data-title="<%= m.title %>" data-delta="-1">−</button>
+            <span class="vote-adj-val" id="vadj2-<%= m.id %>"><%= m.voteCount %></span>
+            <button class="vote-btn" data-id="<%= m.id %>" data-title="<%= m.title %>" data-delta="1">+</button>
+            <button class="vote-btn" data-id="<%= m.id %>" data-title="<%= m.title %>" data-delta="10">+10</button>
+          </div>
+          <button class="btn-icon" title="Zerar" data-action="reset" data-id="<%= m.id %>" data-title="<%= m.title %>">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+          <a href="/admin/edit/<%= m.id %>" class="btn-icon edit">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </a>
+          <button class="btn-icon del" title="Apagar" data-action="delete" data-id="<%= m.id %>" data-title="<%= m.title %>">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <!-- ═══ ADD FILM ═══ -->
+    <% if (activeTab === 'add') { %>
+    <form id="addMovieForm" enctype="multipart/form-data">
+      <div class="form-grid">
+        <div class="form-group form-full">
+          <label>Título *</label>
+          <input class="form-input" name="title" required placeholder="Ex: Duna: Parte Dois" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Ano *</label>
+          <input class="form-input" name="year" type="number" value="<%= new Date().getFullYear() %>" min="1900" max="2099" required>
+        </div>
+        <div class="form-group">
+          <label>Categoria *</label>
+          <select class="form-select" name="category" required>
+            <option value="">Selecione...</option>
+            <option value="acao">⚔️ Ação</option>
+            <option value="comedia">😂 Comédia</option>
+            <option value="terror">👻 Terror</option>
+            <option value="drama">🎭 Drama</option>
+            <option value="ficcao">🚀 Ficção Científica</option>
+            <option value="animacao">🎨 Animação</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Votos Iniciais</label>
+          <input class="form-input" name="voteCount" type="number" value="0" min="0">
+        </div>
+        <div class="form-group form-full">
+          <label>Descrição (opcional)</label>
+          <textarea class="form-input form-textarea" name="description" placeholder="Sinopse curta..."></textarea>
+        </div>
+        <div class="form-group form-full">
+          <label>Imagem — Enviar arquivo</label>
+          <div class="img-upload-area" id="imgUploadArea">
+            <input type="file" name="poster" id="fImgFile" accept="image/*">
+            <img id="imgPreview" class="img-preview" alt="preview" style="display:none">
+            <div id="imgPlaceholder">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="32" height="32" style="color:var(--muted);margin-bottom:.3rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <div style="font-size:.82rem;color:var(--muted);"><strong style="color:var(--twitch)">Clique ou arraste</strong> para enviar · PNG, JPG, WEBP · max 5MB</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group form-full">
+          <label>Ou cole uma URL de imagem</label>
+          <div style="display:flex;gap:.5rem;">
+            <input class="form-input" id="posterUrlInput" name="posterUrl" placeholder="https://..." autocomplete="off">
+            <button type="button" class="btn-ghost btn-sm" onclick="applyUrl()">Aplicar</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <a href="/admin?tab=movies" class="btn-cancel">Cancelar</a>
+        <button type="submit" class="btn-primary">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          Adicionar Filme
+        </button>
+      </div>
+    </form>
+    <% } %>
+
+    <!-- ═══ SETTINGS ═══ -->
+    <% if (activeTab === 'settings') { %>
+    <div class="section-title">Enquete</div>
+    <div class="form-grid" style="max-width:600px;margin-bottom:2rem;">
+      <div class="form-group form-full">
+        <label>Permitir votação múltipla</label>
+        <div style="display:flex;align-items:center;gap:.8rem;margin-top:.2rem;">
+          <label class="toggle-switch">
+            <input type="checkbox" id="multiVoteToggle" disabled checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span style="font-size:.83rem;color:var(--muted);">Um voto por usuário por filme (padrão)</span>
+        </div>
+      </div>
+      <div class="form-group form-full">
+        <label>Estado da enquete</label>
+        <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.2rem;">
+          <button class="btn-primary btn-sm" disabled>✅ Aberta</button>
+          <button class="btn-ghost btn-sm" disabled>⏸ Pausar votação</button>
+        </div>
+        <p style="font-size:.73rem;color:var(--muted);margin-top:.5rem;">Controle granular de estado em breve.</p>
+      </div>
+    </div>
+
+    <div class="section-title">Banco de Dados</div>
+    <div class="action-row" style="margin-bottom:2rem;">
+      <button class="btn-ghost" onclick="exportJson()">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Exportar filmes (JSON)
+      </button>
+    </div>
+
+    <div class="section-title">Zona de Perigo</div>
+    <div class="action-row">
+      <button class="btn-danger" data-action="reset-all">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Zerar TODOS os votos
+      </button>
+    </div>
+
+    <style>
+    .toggle-switch{position:relative;display:inline-block;width:42px;height:24px;}
+    .toggle-switch input{opacity:0;width:0;height:0;}
+    .toggle-slider{position:absolute;cursor:not-allowed;inset:0;background:var(--surface3);border-radius:999px;transition:.3s;}
+    .toggle-slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+    input:checked+.toggle-slider{background:var(--twitch);}
+    input:checked+.toggle-slider:before{transform:translateX(18px);}
+    </style>
+    <% } %>
+
+  </main>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-icon danger">
+      <svg fill="none" viewBox="0 0 24 24" stroke="#e74c3c" width="26" height="26"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    </div>
+    <h2 id="confirmTitle">Confirmar</h2>
+    <p id="confirmMsg"></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn-danger" id="confirmOkBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><span class="toast-dot" id="toastDot"></span><span id="toastMsg"></span></div>
+
+<script src="/js/admin.js"></script>
+<script>
+// ── Busca de filmes ──
+const movieSearch = document.getElementById("movieSearch");
+if (movieSearch) {
+  movieSearch.addEventListener("input", () => {
+    const q = movieSearch.value.toLowerCase().trim();
+    document.querySelectorAll("#movieListContainer .movie-row").forEach(row => {
+      const name = row.querySelector(".movie-row-title")?.textContent.toLowerCase() || "";
+      row.style.display = name.includes(q) ? "" : "none";
+    });
+  });
+}
+</script>
+</body>
+</html>
