@@ -1,8 +1,8 @@
 {
-  "name": "cinevote",
+  "name": "leoeisa",
   "version": "1.0.0",
   "private": true,
-  "description": "Movie poll app with Twitch OAuth",
+  "description": "Enquete de filmes com autenticacao da twitch",
   "scripts": {
     "dev": "cd backend && npm run dev",
     "build": "cd backend && npm run build",
