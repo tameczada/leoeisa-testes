@@ -5,9 +5,9 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: cinevote
+      POSTGRES_USER: leoeisa
+      POSTGRES_PASSWORD: leoeisa
+      POSTGRES_DB: leoeisa
     ports:
       - "5432:5432"
     volumes:
