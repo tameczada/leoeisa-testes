@@ -2,7 +2,7 @@
   "name": "leoeisa",
   "version": "1.0.0",
   "private": true,
-  "description": "Enquete de filmes com autenticacao da twitch",
+  "description": "Enquete de filmes",
   "scripts": {
     "dev": "cd backend && npm run dev",
     "build": "cd backend && npm run build",

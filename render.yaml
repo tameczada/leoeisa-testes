@@ -25,13 +25,13 @@ services:
       - key: TWITCH_CLIENT_SECRET
         sync: false
       - key: TWITCH_REDIRECT_URI
-        sync: false                   # https://cinevote.onrender.com/auth/twitch/callback
+        sync: false                   # https://cinevotequalquer.onrender.com/auth/twitch/callback
       - key: FRONTEND_URL
         sync: false                   # https://cinevote.onrender.com
 
   # ── PostgreSQL Database ────────────────────────────────────────────────
 databases:
   - name: leoeisa-db
-    databaseName: cinevote
+    databaseName: leoeisa
     region: oregon
     plan: free

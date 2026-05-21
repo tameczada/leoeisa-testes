@@ -173,37 +173,17 @@
       </div>
     </div>
 
-    <!-- Busca -->
-    <div style="margin-bottom:1rem;">
-      <form id="searchForm" style="display:flex;gap:.5rem;max-width:380px;">
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Buscar por usuário ou filme..."
-          value="<%= search %>"
-          style="flex:1;padding:.45rem .85rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:.83rem;outline:none;"
-          autocomplete="off"
-        >
-        <button type="submit" style="padding:.45rem .9rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">
-          Buscar
-        </button>
-        <% if (search) { %>
-        <a href="/admin/logs?action=<%= activeAction %>" style="padding:.45rem .7rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:.82rem;font-weight:600;text-decoration:none;display:flex;align-items:center;">✕</a>
-        <% } %>
-      </form>
-    </div>
-
     <!-- Filtros -->
     <div class="logs-header">
       <div class="logs-filters">
-        <a href="/admin/logs?search=<%= search %>" class="filter-chip <%= activeAction === '' ? 'active' : '' %>">Todos</a>
-        <a href="/admin/logs?action=VOTE&search=<%= search %>" class="filter-chip <%= activeAction === 'VOTE' ? 'active' : '' %>">🗳 Votos</a>
-        <a href="/admin/logs?action=VOTE_RETURN&search=<%= search %>" class="filter-chip <%= activeAction === 'VOTE_RETURN' ? 'active' : '' %>">↩ Votos Devolvidos</a>
-        <a href="/admin/logs?action=MOVIE_ADD&search=<%= search %>" class="filter-chip <%= activeAction === 'MOVIE_ADD' ? 'active' : '' %>">➕ Filmes Adicionados</a>
-        <a href="/admin/logs?action=MOVIE_REMOVE&search=<%= search %>" class="filter-chip <%= activeAction === 'MOVIE_REMOVE' ? 'active' : '' %>">🗑 Filmes Removidos</a>
-        <a href="/admin/logs?action=MOVIE_EDIT&search=<%= search %>" class="filter-chip <%= activeAction === 'MOVIE_EDIT' ? 'active' : '' %>">✏️ Edições</a>
-        <a href="/admin/logs?action=RESET_ALL&search=<%= search %>" class="filter-chip <%= activeAction === 'RESET_ALL' ? 'active' : '' %>">⚠️ Reset Geral</a>
-        <a href="/admin/logs?action=RESET_MOVIE&search=<%= search %>" class="filter-chip <%= activeAction === 'RESET_MOVIE' ? 'active' : '' %>">🔄 Reset Filme</a>
+        <a href="/admin/logs" class="filter-chip <%= activeAction === '' ? 'active' : '' %>">Todos</a>
+        <a href="/admin/logs?action=VOTE" class="filter-chip <%= activeAction === 'VOTE' ? 'active' : '' %>">🗳 Votos</a>
+        <a href="/admin/logs?action=VOTE_RETURN" class="filter-chip <%= activeAction === 'VOTE_RETURN' ? 'active' : '' %>">↩ Votos Devolvidos</a>
+        <a href="/admin/logs?action=MOVIE_ADD" class="filter-chip <%= activeAction === 'MOVIE_ADD' ? 'active' : '' %>">➕ Filmes Adicionados</a>
+        <a href="/admin/logs?action=MOVIE_REMOVE" class="filter-chip <%= activeAction === 'MOVIE_REMOVE' ? 'active' : '' %>">🗑 Filmes Removidos</a>
+        <a href="/admin/logs?action=MOVIE_EDIT" class="filter-chip <%= activeAction === 'MOVIE_EDIT' ? 'active' : '' %>">✏️ Edições</a>
+        <a href="/admin/logs?action=RESET_ALL" class="filter-chip <%= activeAction === 'RESET_ALL' ? 'active' : '' %>">⚠️ Reset Geral</a>
+        <a href="/admin/logs?action=RESET_MOVIE" class="filter-chip <%= activeAction === 'RESET_MOVIE' ? 'active' : '' %>">🔄 Reset Filme</a>
       </div>
     </div>
 
@@ -301,15 +281,6 @@
 </div>
 
 <script>
-  // Busca — mantém filtro de action ao submeter
-  document.getElementById('searchForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    var q = document.getElementById('searchInput').value.trim();
-    var url = '/admin/logs?action=' + encodeURIComponent('<%= activeAction %>');
-    if (q) url += '&search=' + encodeURIComponent(q);
-    window.location.href = url;
-  });
-
   var activeAction = '<%= activeAction %>';
 
   // Toast
