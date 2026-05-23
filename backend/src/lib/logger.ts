@@ -3,6 +3,7 @@ import { prisma } from "./prisma";
 
 export type LogAction =
   | "VOTE"
+  | "UNVOTE"
   | "VOTE_RETURN"
   | "MOVIE_ADD"
   | "MOVIE_REMOVE"
@@ -25,16 +26,13 @@ export async function writeLog(params: LogParams): Promise<void> {
   try {
     await prisma.log.create({
       data: {
-        action: params.action,
-        userId: params.userId ?? null,
+        action:  params.action,
+        userId:  params.userId  ?? null,
         movieId: params.movieId ?? null,
-        meta: params.meta
-          ? (params.meta as Prisma.InputJsonValue)
-          : undefined,
+        meta:    params.meta ? (params.meta as Prisma.InputJsonValue) : undefined,
       },
     });
   } catch (err) {
-    // Log silencioso — não propaga o erro
     console.error("[logger] Failed to write log:", err);
   }
 }
