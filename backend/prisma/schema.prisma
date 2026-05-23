@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -5,17 +8,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-enum Category {
-  acao
-  comedia
-  terror
-  drama
-  ficcao
-  animacao
-
-  @@map("category")
 }
 
 model User {
@@ -35,16 +27,16 @@ model User {
 }
 
 model Movie {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
   year        Int
-  category    Category
+  category    String
   poster      String?
   description String?
-  voteCount   Int       @default(0)
-  active      Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  voteCount   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   votes       Vote[]
   logs        Log[]
@@ -76,7 +68,6 @@ model Session {
 
 // Ações possíveis:
 // VOTE         — usuário votou em um filme
-// UNVOTE       — usuário desfez voto em um filme
 // VOTE_RETURN  — votos de um usuário foram devolvidos pelo admin
 // MOVIE_ADD    — filme adicionado pelo admin
 // MOVIE_REMOVE — filme removido pelo admin
