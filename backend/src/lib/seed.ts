@@ -1,70 +1,36 @@
-import { PrismaClient, Category } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const movies = [
-  {
-    title:       "Interestelar",
-    year:        2014,
-    category:    Category.ficcao,
-    poster:      "https://image.tmdb.org/t/p/w500/xJHokMbljvjADYdit5fK5VQsXEG.jpg",
-    description: "Uma equipe de astronautas viaja pelo universo em busca de um novo lar para a humanidade.",
-    voteCount:   0,
-  },
-  {
-    title:       "Coringa",
-    year:        2019,
-    category:    Category.drama,
-    poster:      "https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
-    description: "A origin story de Arthur Fleck, um homem ignorado pela sociedade que se torna o Coringa.",
-    voteCount:   0,
-  },
-  {
-    title:       "Hereditário",
-    year:        2018,
-    category:    Category.terror,
-    poster:      "https://image.tmdb.org/t/p/w500/p0MpDzomFMcYkMXqnXUl4EIAZ5.jpg",
-    description: "Após a morte da matriarca, uma família começa a desenterrar segredos perturbadores.",
-    voteCount:   0,
-  },
-  {
-    title:       "The Gentlemen",
-    year:        2019,
-    category:    Category.acao,
-    poster:      "https://image.tmdb.org/t/p/w500/jtrhTYB7xSrJxR1vusu99nvnZ1g.jpg",
-    description: "Um traficante americano tenta vender seu império de cannabis na Inglaterra.",
-    voteCount:   0,
-  },
-  {
-    title:       "Superbad",
-    year:        2007,
-    category:    Category.comedia,
-    poster:      "https://image.tmdb.org/t/p/w500/ek8e8txUyUwd2BNqj6lFEerJfbq.jpg",
-    description: "Dois amigos inseparáveis tentam sobreviver ao ensino médio e a festas épicas.",
-    voteCount:   0,
-  },
-  {
-    title:       "Homem-Aranha: No Aranhaverso",
-    year:        2018,
-    category:    Category.animacao,
-    poster:      "https://image.tmdb.org/t/p/w500/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg",
-    description: "Miles Morales se torna o Homem-Aranha e viaja pelo multiverso.",
-    voteCount:   0,
-  },
+const MOVIES = [
+  { title: "Duna: Parte Dois", year: 2024, category: "ficcao", poster: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg", voteCount: 142 },
+  { title: "Deadpool & Wolverine", year: 2024, category: "acao", poster: "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg", voteCount: 98 },
+  { title: "Alien: Romulus", year: 2024, category: "terror", poster: "https://image.tmdb.org/t/p/w500/b33nnKl1GSFbao4l3fZDDqsMx0F.jpg", voteCount: 76 },
+  { title: "Inside Out 2", year: 2024, category: "animacao", poster: "https://image.tmdb.org/t/p/w500/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg", voteCount: 201 },
+  { title: "Coringa: Delírio a Dois", year: 2024, category: "drama", poster: "https://image.tmdb.org/t/p/w500/2Bf0PGKIcVlFxeEQXnZLYZPBsya.jpg", voteCount: 53 },
+  { title: "Shrek 5", year: 2026, category: "animacao", poster: "https://image.tmdb.org/t/p/w500/6ELJEzQJ3Y45HczvreradPZqYRQ.jpg", voteCount: 115 },
+  { title: "Mad Max: Furiosa", year: 2024, category: "acao", poster: "https://image.tmdb.org/t/p/w500/iADOJ8Zymht2JPMoy3R7xceZprc.jpg", voteCount: 87 },
+  { title: "Terrifier 3", year: 2024, category: "terror", poster: "https://image.tmdb.org/t/p/w500/l1175hgL5DoXnqeZQCcU3eKMbOZ.jpg", voteCount: 64 },
+  { title: "Sonic 3", year: 2024, category: "comedia", poster: "https://image.tmdb.org/t/p/w500/d8Ryb8AunYAuycVKDp5HpdWPKgC.jpg", voteCount: 130 },
+  { title: "Wicked", year: 2024, category: "drama", poster: "https://image.tmdb.org/t/p/w500/c5Tqxeo1UpBvnAc3csUm7j3hlQl.jpg", voteCount: 92 },
+  { title: "Missão Impossível 8", year: 2025, category: "acao", poster: "https://image.tmdb.org/t/p/w500/z53D72EAOxGRqdr7KXXWp9dJiDe.jpg", voteCount: 109 },
+  { title: "A Substância", year: 2024, category: "terror", poster: "https://image.tmdb.org/t/p/w500/lqoMzCcZYEFK729d6qzt349fB4o.jpg", voteCount: 47 },
 ];
 
 async function main() {
-  console.log("🌱 Seeding...");
-  for (const m of movies) {
-    await prisma.movie.upsert({
-      where:  { id: m.title }, // não existe, sempre cria
-      update: {},
-      create: m,
-    });
+  console.log("🌱 Seeding database...");
+
+  // Clear existing movies (keep users/votes if any)
+  await prisma.vote.deleteMany();
+  await prisma.movie.deleteMany();
+
+  for (const movie of MOVIES) {
+    await prisma.movie.create({ data: movie });
   }
-  console.log(`✅ ${movies.length} filmes inseridos.`);
+
+  console.log(`✅ Seeded ${MOVIES.length} movies.`);
 }
 
 main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+  .catch((e) => { console.error(e); process.exit(1); })
+  .finally(async () => { await prisma.$disconnect(); });
