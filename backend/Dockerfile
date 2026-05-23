@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y openssl
 COPY package*.json ./
 COPY prisma ./prisma
 
-RUN npm ci --ignore-scripts
+RUN npm ci --ignore-scripts --legacy-peer-deps
 
 COPY . .
 
@@ -29,7 +29,7 @@ ENV NODE_ENV=production
 COPY package*.json ./
 COPY prisma ./prisma
 
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm ci --omit=dev --ignore-scripts --legacy-peer-deps
 
 COPY --from=builder /app/node_modules ./node_modules
 
