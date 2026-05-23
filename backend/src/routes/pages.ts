@@ -63,7 +63,9 @@ router.get("/filmes", async (_req: Request, res: Response) => {
   const movies = await prisma.movie.findMany({
     orderBy: [{ active: "desc" }, { voteCount: "desc" }],
   });
+
   res.json(movies);
+});
 
 // ── Admin pages ──
 
