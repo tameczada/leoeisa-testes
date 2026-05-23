@@ -97,12 +97,6 @@ app.use(
 
 // ── Health check (Render uses this) ──
 app.get("/health", (_req, res) => res.json({ status: "ok", ts: Date.now() }));
-
-app.get("/filmes", async (_req: Request, res: Response) => {
-  const movies = await prisma.movie.findMany({
-    orderBy: [{ active: "desc" }, { voteCount: "desc" }],
-  });
-  res.json(movies);
 // ── Setup route — torna o usuário logado admin (protegido por SETUP_SECRET) ──
 // Uso: /setup?secret=SUA_SETUP_SECRET
 // Depois de usar, remova a variável SETUP_SECRET do Render para desativar.
