@@ -181,6 +181,7 @@ app.use("/auth", authRouter);
 app.use("/api/movies", moviesRouter);
 app.use("/api/admin", adminRouter);
 app.use("/", pagesRouter);
+app.use("/filmes", pagesRouter);
 
 // ── 404 ──
 app.use((_req, res) => {
