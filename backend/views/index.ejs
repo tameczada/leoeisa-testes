@@ -41,6 +41,23 @@
   <% }) %>
 </div>
 
+<div class="search-bar">
+  <div class="search-wrap">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    <input class="search-input" id="movieSearch" placeholder="Buscar filme..." autocomplete="off">
+  </div>
+</div>
+<div class="view-toggle">
+  <button class="view-btn" id="btnGrid" title="Grade" aria-label="Modo grade">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+  </button>
+  <button class="view-btn" id="btnList" title="Lista" aria-label="Modo lista">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+  </button>
+</div>
+
+<p id="noResults" style="display:none;text-align:center;color:var(--muted);padding:2rem 0;font-size:.9rem;">Nenhum filme encontrado.</p>
+
 <div class="grid" id="movieGrid">
   <% if (movies.length === 0) { %>
     <div class="empty">
@@ -53,7 +70,7 @@
     <%
       const catLabel = catLabels[movie.category] || movie.category;
     %>
-    <div class="card" style="animation-delay:<%= i * 0.05 %>s">
+    <div class="card" style="animation-delay:<%= i * 0.05 %>s" data-title="<%= movie.title.toLowerCase() %>">
       <div class="card-poster">
         <img
           src="<%= movie.poster || 'https://placehold.co/500x281/1c1e27/6b7080?text=Sem+Poster' %>"
@@ -220,5 +237,51 @@ Fica terminantemente proibida a indicação de:
 </div>
 
 <script src="/js/main.js"></script>
+<script>
+  // ── View mode toggle ──
+  const grid    = document.getElementById('movieGrid');
+  const btnGrid = document.getElementById('btnGrid');
+  const btnList = document.getElementById('btnList');
+
+  function setView(mode) {
+    if (mode === 'list') {
+      grid.classList.add('list-view');
+      btnList.classList.add('active');
+      btnGrid.classList.remove('active');
+    } else {
+      grid.classList.remove('list-view');
+      btnGrid.classList.add('active');
+      btnList.classList.remove('active');
+    }
+    localStorage.setItem('cinevote_view', mode);
+  }
+
+  // Restore saved preference
+  setView(localStorage.getItem('cinevote_view') || 'grid');
+
+  btnGrid.addEventListener('click', function() { setView('grid'); });
+  btnList.addEventListener('click', function() { setView('list'); });
+
+  // ── Search ──
+  const movieSearch = document.getElementById('movieSearch');
+  const noResults   = document.getElementById('noResults');
+
+  if (movieSearch) {
+    movieSearch.addEventListener('input', function() {
+      const q = this.value.toLowerCase().trim();
+      const cards = document.querySelectorAll('#movieGrid .card');
+      let visible = 0;
+
+      cards.forEach(function(card) {
+        const title = card.getAttribute('data-title') || '';
+        const show  = !q || title.includes(q);
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+
+      noResults.style.display = visible === 0 && q ? 'block' : 'none';
+    });
+  }
+</script>
 </body>
 </html>
