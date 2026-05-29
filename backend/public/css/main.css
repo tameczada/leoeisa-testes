@@ -214,7 +214,7 @@ header {
 .card-rank {
   position: absolute; top: 8px; left: 10px;
   font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem;
-  color: rgba(255,255,255,.15); line-height: 1;
+  color: rgba(255,255,255,.70); line-height: 1;
 }
 .card-body { padding: 1rem 1.1rem 1.2rem; }
 .card-title { font-size: 1rem; font-weight: 600; line-height: 1.2; margin-bottom: .2rem; }
