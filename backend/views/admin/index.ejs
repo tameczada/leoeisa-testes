@@ -74,7 +74,7 @@
         <div style="font-weight:600;font-size:.88rem;">Reações nos filmes</div>
         <div style="font-size:.75rem;color:var(--muted);margin-top:.15rem;">Permite usuários reagirem com emojis nos filmes</div>
       </div>
-      <button id="reactionsToggle" onclick="toggleReactions()" style="position:relative;width:44px;height:24px;border-radius:999px;border:none;cursor:pointer;transition:background .2s;background:var(--surface3);">
+      <button id="reactionsToggle" style="position:relative;width:44px;height:24px;border-radius:999px;border:none;cursor:pointer;transition:background .2s;background:var(--surface3);">
         <span style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;display:block;" id="reactionsThumb"></span>
       </button>
     </div>
@@ -306,32 +306,43 @@ if (movieSearch) {
   });
 }
   // ── Reactions toggle ──
-  async function initReactionsToggle() {
-    const res  = await fetch('/api/admin/settings/reactions');
-    const data = await res.json();
-    setToggleUI(data.enabled);
-  }
-
   function setToggleUI(enabled) {
     var btn   = document.getElementById('reactionsToggle');
     var thumb = document.getElementById('reactionsThumb');
     if (!btn || !thumb) return;
-    btn.style.background   = enabled ? 'var(--twitch)' : 'var(--surface3)';
-    thumb.style.transform  = enabled ? 'translateX(20px)' : 'translateX(0)';
-    btn.dataset.enabled    = enabled ? 'true' : 'false';
+    btn.style.background  = enabled ? 'var(--twitch)' : 'var(--surface3)';
+    thumb.style.transform = enabled ? 'translateX(20px)' : 'translateX(0)';
+    btn.dataset.enabled   = enabled ? 'true' : 'false';
   }
 
-  async function toggleReactions() {
+  async function initReactionsToggle() {
+    try {
+      var res  = await fetch('/api/admin/settings/reactions');
+      var data = await res.json();
+      setToggleUI(data.enabled);
+    } catch(e) {
+      console.error('initReactionsToggle error:', e);
+    }
+  }
+
+  document.getElementById('reactionsToggle').addEventListener('click', async function() {
     var btn     = document.getElementById('reactionsToggle');
     var current = btn.dataset.enabled === 'true';
     var next    = !current;
     setToggleUI(next);
-    await fetch('/api/admin/settings/reactions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enabled: next })
-    });
-  }
+    try {
+      var res  = await fetch('/api/admin/settings/reactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: next })
+      });
+      var data = await res.json();
+      setToggleUI(data.enabled);
+    } catch(e) {
+      console.error('toggleReactions error:', e);
+      setToggleUI(current); // reverte se falhar
+    }
+  });
 
   initReactionsToggle();
 </script>
