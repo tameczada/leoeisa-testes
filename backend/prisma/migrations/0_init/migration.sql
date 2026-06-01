@@ -92,3 +92,36 @@ ALTER TABLE "votes" ADD CONSTRAINT "votes_userId_fkey" FOREIGN KEY ("userId") RE
 
 -- AddForeignKey
 ALTER TABLE "votes" ADD CONSTRAINT "votes_movieId_fkey" FOREIGN KEY ("movieId") REFERENCES "movies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Migration: add_reactions
+
+CREATE TABLE "reactions" (
+  "id"        TEXT         NOT NULL,
+  "userId"    TEXT         NOT NULL,
+  "movieId"   TEXT         NOT NULL,
+  "emoji"     TEXT         NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "reactions_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX "reactions_userId_movieId_emoji_key"
+  ON "reactions"("userId", "movieId", "emoji");
+
+ALTER TABLE "reactions"
+  ADD CONSTRAINT "reactions_userId_fkey"
+  FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "reactions"
+  ADD CONSTRAINT "reactions_movieId_fkey"
+  FOREIGN KEY ("movieId") REFERENCES "movies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+CREATE INDEX "reactions_movieId_idx" ON "reactions"("movieId");
+
+-- Configurações globais
+CREATE TABLE "settings" (
+  "key"   TEXT NOT NULL,
+  "value" TEXT NOT NULL,
+  CONSTRAINT "settings_pkey" PRIMARY KEY ("key")
+);
+
+INSERT INTO "settings" ("key", "value") VALUES ('reactions_enabled', 'false');

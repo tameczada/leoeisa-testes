@@ -22,6 +22,7 @@ model User {
 
   votes         Vote[]
   logs          Log[]
+  reactions     Reaction[]
 
   @@map("users")
 }
@@ -40,6 +41,7 @@ model Movie {
 
   votes       Vote[]
   logs        Log[]
+  reactions   Reaction[]
 
   @@map("movies")
 }
@@ -89,4 +91,29 @@ model Log {
   @@index([action])
   @@index([createdAt(sort: Desc)])
   @@map("logs")
+}
+
+// Reações estilo Discord — um emoji por usuário por filme
+model Reaction {
+  id        String   @id @default(cuid())
+  userId    String
+  movieId   String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId, emoji])
+  @@index([movieId])
+  @@map("reactions")
+}
+
+// Configurações globais chave/valor
+// reactions_enabled: "true" | "false"
+model Setting {
+  key   String @id
+  value String
+
+  @@map("settings")
 }

@@ -67,6 +67,18 @@
     </div>
 
     <div class="section-title">Ações Rápidas</div>
+
+    <!-- Toggle reações -->
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem;margin-bottom:.8rem;">
+      <div>
+        <div style="font-weight:600;font-size:.88rem;">Reações nos filmes</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.15rem;">Permite usuários reagirem com emojis nos filmes</div>
+      </div>
+      <button id="reactionsToggle" onclick="toggleReactions()" style="position:relative;width:44px;height:24px;border-radius:999px;border:none;cursor:pointer;transition:background .2s;background:var(--surface3);">
+        <span style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;display:block;" id="reactionsThumb"></span>
+      </button>
+    </div>
+
     <div class="action-row">
       <button class="btn-danger" data-action="reset-all">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -293,27 +305,35 @@ if (movieSearch) {
     });
   });
 }
+  // ── Reactions toggle ──
+  async function initReactionsToggle() {
+    const res  = await fetch('/api/admin/settings/reactions');
+    const data = await res.json();
+    setToggleUI(data.enabled);
+  }
+
+  function setToggleUI(enabled) {
+    var btn   = document.getElementById('reactionsToggle');
+    var thumb = document.getElementById('reactionsThumb');
+    if (!btn || !thumb) return;
+    btn.style.background   = enabled ? 'var(--twitch)' : 'var(--surface3)';
+    thumb.style.transform  = enabled ? 'translateX(20px)' : 'translateX(0)';
+    btn.dataset.enabled    = enabled ? 'true' : 'false';
+  }
+
+  async function toggleReactions() {
+    var btn     = document.getElementById('reactionsToggle');
+    var current = btn.dataset.enabled === 'true';
+    var next    = !current;
+    setToggleUI(next);
+    await fetch('/api/admin/settings/reactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: next })
+    });
+  }
+
+  initReactionsToggle();
 </script>
-
-<!-- Bottom nav mobile -->
-<nav class="admin-bottom-nav">
-  <a href="/admin?tab=overview" class="active">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-    Geral
-  </a>
-  <a href="/admin?tab=movies" class="">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"/></svg>
-    Filmes
-  </a>
-  <a href="/admin/users" class="">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-    Usuários
-  </a>
-  <a href="/" class="">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-    Site
-  </a>
-</nav>
-
 </body>
 </html>

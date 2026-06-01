@@ -47,15 +47,6 @@
     <input class="search-input" id="movieSearch" placeholder="Buscar filme..." autocomplete="off">
   </div>
 </div>
-<div class="view-toggle">
-  <button class="view-btn" id="btnGrid" title="Grade" aria-label="Modo grade">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-  </button>
-  <button class="view-btn" id="btnList" title="Lista" aria-label="Modo lista">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-  </button>
-</div>
-
 <p id="noResults" style="display:none;text-align:center;color:var(--muted);padding:2rem 0;font-size:.9rem;">Nenhum filme encontrado.</p>
 
 <div class="grid" id="movieGrid">
@@ -115,6 +106,18 @@
             Votar
           </button>
         <% } %>
+
+        <% if (reactionsEnabled) { %>
+        <div class="reactions" data-movie-id="<%= movie.id %>">
+          <% ['🔥','❤️','😂','😮','👏','💀'].forEach(function(emoji) { %>
+            <button class="reaction-btn" data-emoji="<%= emoji %>" data-movie-id="<%= movie.id %>">
+              <span class="reaction-emoji"><%= emoji %></span>
+              <span class="reaction-count">0</span>
+            </button>
+          <% }); %>
+        </div>
+        <% } %>
+
       </div>
     </div>
   <% }) %>
@@ -238,29 +241,61 @@ Fica terminantemente proibida a indicação de:
 
 <script src="/js/main.js"></script>
 <script>
-  // ── View mode toggle ──
-  const grid    = document.getElementById('movieGrid');
-  const btnGrid = document.getElementById('btnGrid');
-  const btnList = document.getElementById('btnList');
+  // ── Reactions ──
+  var reactionsEnabled = <%= reactionsEnabled %>;
 
-  function setView(mode) {
-    if (mode === 'list') {
-      grid.classList.add('list-view');
-      btnList.classList.add('active');
-      btnGrid.classList.remove('active');
-    } else {
-      grid.classList.remove('list-view');
-      btnGrid.classList.add('active');
-      btnList.classList.remove('active');
-    }
-    localStorage.setItem('cinevote_view', mode);
+  function loadReactions() {
+    if (!reactionsEnabled) return;
+    document.querySelectorAll('.reactions[data-movie-id]').forEach(function(wrap) {
+      var movieId = wrap.getAttribute('data-movie-id');
+      fetch('/api/reactions/' + movieId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.enabled) return;
+          wrap.querySelectorAll('.reaction-btn').forEach(function(btn) {
+            var emoji = btn.getAttribute('data-emoji');
+            var count = data.counts[emoji] || 0;
+            btn.querySelector('.reaction-count').textContent = count > 0 ? count : '';
+            if (data.userReactions.includes(emoji)) btn.classList.add('reacted');
+            else btn.classList.remove('reacted');
+          });
+        });
+    });
   }
 
-  // Restore saved preference
-  setView(localStorage.getItem('cinevote_view') || 'grid');
+  document.addEventListener('click', function(e) {
+    if (!reactionsEnabled) return;
+    var btn = e.target.closest('.reaction-btn');
+    if (!btn) return;
 
-  btnGrid.addEventListener('click', function() { setView('grid'); });
-  btnList.addEventListener('click', function() { setView('list'); });
+    <% if (!user) { %>
+      window.location.href = '/auth/twitch';
+      return;
+    <% } %>
+
+    var emoji   = btn.getAttribute('data-emoji');
+    var movieId = btn.getAttribute('data-movie-id');
+
+    fetch('/api/reactions/' + movieId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emoji: emoji })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var wrap = document.querySelector('.reactions[data-movie-id="' + movieId + '"]');
+      if (!wrap) return;
+      wrap.querySelectorAll('.reaction-btn').forEach(function(b) {
+        var em = b.getAttribute('data-emoji');
+        var count = data.counts[em] || 0;
+        b.querySelector('.reaction-count').textContent = count > 0 ? count : '';
+        if (data.userReactions.includes(em)) b.classList.add('reacted');
+        else b.classList.remove('reacted');
+      });
+    });
+  });
+
+  loadReactions();
 
   // ── Search ──
   const movieSearch = document.getElementById('movieSearch');

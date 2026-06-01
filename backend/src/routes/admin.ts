@@ -184,6 +184,23 @@ router.post("/reset-all-votes", async (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
+// GET /api/admin/settings/reactions — status atual
+router.get("/settings/reactions", async (_req: Request, res: Response) => {
+  const s = await prisma.setting.findUnique({ where: { key: "reactions_enabled" } });
+  res.json({ enabled: s?.value === "true" });
+});
+
+// POST /api/admin/settings/reactions — ativa ou desativa
+router.post("/settings/reactions", async (req: Request, res: Response) => {
+  const { enabled } = req.body as { enabled: boolean };
+  await prisma.setting.upsert({
+    where:  { key: "reactions_enabled" },
+    update: { value: enabled ? "true" : "false" },
+    create: { key: "reactions_enabled", value: enabled ? "true" : "false" },
+  });
+  res.json({ success: true, enabled });
+});
+
 // DELETE /api/admin/logs — limpar logs (todos ou por tipo)
 router.delete("/logs", async (req: Request, res: Response) => {
   const { action } = req.query as { action?: string };

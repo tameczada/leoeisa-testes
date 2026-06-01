@@ -40,8 +40,11 @@ router.get("/", async (req: Request, res: Response) => {
 
   const categories = ["todos", "acao", "comedia", "terror", "drama", "ficcao", "animacao"];
 
+  const reactionsEnabled = reactionsSetting?.value === "true";
+
   res.render("index", {
     movies: enriched,
+    reactionsEnabled,
     total,
     activeCategory: category,
     categories,
@@ -59,20 +62,13 @@ router.get("/", async (req: Request, res: Response) => {
   });
 });
 
-router.get("/filmes", async (_req: Request, res: Response) => {
-  const movies = await prisma.movie.findMany({
-    orderBy: [{ active: "desc" }, { voteCount: "desc" }],
-  });
-
-  res.json(movies);
-});
-
 // ── Admin pages ──
 
 router.get("/admin", requireAdmin, async (req: Request, res: Response) => {
-  const [movies, totalVotesResult] = await Promise.all([
+  const [movies, totalVotesResult, reactionsSetting] = await Promise.all([
     prisma.movie.findMany({ orderBy: { voteCount: "desc" } }),
     prisma.vote.count(),
+    prisma.setting.findUnique({ where: { key: "reactions_enabled" } }),
   ]);
 
   const total = totalVotesResult;
