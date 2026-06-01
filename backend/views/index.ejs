@@ -108,13 +108,20 @@
         <% } %>
 
         <% if (reactionsEnabled) { %>
-        <div class="reactions" data-movie-id="<%= movie.id %>">
-          <% ['🔥','❤️','😂','😮','👏','💀'].forEach(function(emoji) { %>
-            <button class="reaction-btn" data-emoji="<%= emoji %>" data-movie-id="<%= movie.id %>">
-              <span class="reaction-emoji"><%= emoji %></span>
-              <span class="reaction-count">0</span>
-            </button>
-          <% }); %>
+        <div class="reactions-wrap" data-movie-id="<%= movie.id %>">
+          <!-- Reações com contagem (só aparecem se count > 0) -->
+          <div class="reactions-display"></div>
+          <!-- Botão reagir -->
+          <button class="btn-react" data-movie-id="<%= movie.id %>">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Reagir
+          </button>
+          <!-- Picker (oculto por padrão) -->
+          <div class="reaction-picker" style="display:none;">
+            <% ['🔥','❤️','😂','😮','👏','💀'].forEach(function(emoji) { %>
+              <button class="reaction-pick-btn" data-emoji="<%= emoji %>" data-movie-id="<%= movie.id %>"><%= emoji %></button>
+            <% }); %>
+          </div>
         </div>
         <% } %>
 
@@ -244,55 +251,100 @@ Fica terminantemente proibida a indicação de:
   // ── Reactions ──
   var reactionsEnabled = <%= reactionsEnabled %>;
 
+  var EMOJIS = ['🔥','❤️','😂','😮','👏','💀'];
+
+  function renderDisplay(wrap, counts, userReactions) {
+    var display = wrap.querySelector('.reactions-display');
+    display.innerHTML = '';
+    EMOJIS.forEach(function(emoji) {
+      var count = counts[emoji] || 0;
+      if (count === 0) return; // só mostra se tiver reação
+      var btn = document.createElement('button');
+      btn.className = 'reaction-btn' + (userReactions.includes(emoji) ? ' reacted' : '');
+      btn.setAttribute('data-emoji', emoji);
+      btn.setAttribute('data-movie-id', wrap.getAttribute('data-movie-id'));
+      btn.innerHTML = '<span class="reaction-emoji">' + emoji + '</span><span class="reaction-count">' + count + '</span>';
+      display.appendChild(btn);
+    });
+  }
+
   function loadReactions() {
     if (!reactionsEnabled) return;
-    document.querySelectorAll('.reactions[data-movie-id]').forEach(function(wrap) {
+    document.querySelectorAll('.reactions-wrap[data-movie-id]').forEach(function(wrap) {
       var movieId = wrap.getAttribute('data-movie-id');
       fetch('/api/reactions/' + movieId)
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (!data.enabled) return;
-          wrap.querySelectorAll('.reaction-btn').forEach(function(btn) {
-            var emoji = btn.getAttribute('data-emoji');
-            var count = data.counts[emoji] || 0;
-            btn.querySelector('.reaction-count').textContent = count > 0 ? count : '';
-            if (data.userReactions.includes(emoji)) btn.classList.add('reacted');
-            else btn.classList.remove('reacted');
-          });
+          renderDisplay(wrap, data.counts, data.userReactions);
         });
     });
   }
 
+  // Fechar pickers abertos ao clicar fora
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.reactions-wrap')) {
+      document.querySelectorAll('.reaction-picker').forEach(function(p) { p.style.display = 'none'; });
+    }
+  });
+
   document.addEventListener('click', function(e) {
     if (!reactionsEnabled) return;
-    var btn = e.target.closest('.reaction-btn');
-    if (!btn) return;
 
-    <% if (!user) { %>
-      window.location.href = '/auth/twitch';
+    // Abrir/fechar picker
+    var reactBtn = e.target.closest('.btn-react');
+    if (reactBtn) {
+      e.stopPropagation();
+      var wrap   = reactBtn.closest('.reactions-wrap');
+      var picker = wrap.querySelector('.reaction-picker');
+      var isOpen = picker.style.display !== 'none';
+      document.querySelectorAll('.reaction-picker').forEach(function(p) { p.style.display = 'none'; });
+      picker.style.display = isOpen ? 'none' : 'flex';
       return;
-    <% } %>
+    }
 
-    var emoji   = btn.getAttribute('data-emoji');
-    var movieId = btn.getAttribute('data-movie-id');
+    // Clicar num emoji do picker
+    var pickBtn = e.target.closest('.reaction-pick-btn');
+    if (pickBtn) {
+      e.stopPropagation();
+      <% if (!user) { %>
+        window.location.href = '/auth/twitch';
+        return;
+      <% } %>
+      var emoji   = pickBtn.getAttribute('data-emoji');
+      var movieId = pickBtn.getAttribute('data-movie-id');
+      var wrap    = pickBtn.closest('.reactions-wrap');
+      wrap.querySelector('.reaction-picker').style.display = 'none';
 
-    fetch('/api/reactions/' + movieId, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ emoji: emoji })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      var wrap = document.querySelector('.reactions[data-movie-id="' + movieId + '"]');
-      if (!wrap) return;
-      wrap.querySelectorAll('.reaction-btn').forEach(function(b) {
-        var em = b.getAttribute('data-emoji');
-        var count = data.counts[em] || 0;
-        b.querySelector('.reaction-count').textContent = count > 0 ? count : '';
-        if (data.userReactions.includes(em)) b.classList.add('reacted');
-        else b.classList.remove('reacted');
-      });
-    });
+      fetch('/api/reactions/' + movieId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji: emoji })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) { renderDisplay(wrap, data.counts, data.userReactions); });
+      return;
+    }
+
+    // Clicar numa reação já exibida (toggle off)
+    var reactionBtn = e.target.closest('.reaction-btn');
+    if (reactionBtn) {
+      <% if (!user) { %>
+        window.location.href = '/auth/twitch';
+        return;
+      <% } %>
+      var emoji   = reactionBtn.getAttribute('data-emoji');
+      var movieId = reactionBtn.getAttribute('data-movie-id');
+      var wrap    = reactionBtn.closest('.reactions-wrap');
+
+      fetch('/api/reactions/' + movieId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji: emoji })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) { renderDisplay(wrap, data.counts, data.userReactions); });
+    }
   });
 
   loadReactions();
