@@ -79,6 +79,28 @@
       </button>
     </div>
 
+    <!-- Toggle bot Twitch -->
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem;margin-bottom:.8rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;">
+        <div>
+          <div style="font-weight:600;font-size:.88rem;">Bot do Twitch — !ranking</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.15rem;">Responde o ranking atual no chat quando um mod digita !ranking</div>
+        </div>
+        <button id="botToggle" style="position:relative;width:44px;height:24px;border-radius:999px;border:none;cursor:pointer;transition:background .2s;background:var(--surface3);">
+          <span style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;display:block;" id="botThumb"></span>
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+        <span style="font-size:.78rem;color:var(--muted);">Mostrar top</span>
+        <div style="display:flex;gap:.3rem;">
+          <button class="top-btn" data-value="3">3</button>
+          <button class="top-btn" data-value="5">5</button>
+          <button class="top-btn" data-value="10">10</button>
+        </div>
+        <span id="botStatus" style="font-size:.72rem;margin-left:.3rem;"></span>
+      </div>
+    </div>
+
     <div class="action-row">
       <button class="btn-danger" data-action="reset-all">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -306,6 +328,94 @@ if (movieSearch) {
   });
 }
   // ── Reactions toggle ──
+  // ── Bot styles (inline pois são poucos) ──
+  document.head.insertAdjacentHTML('beforeend', `<style>
+    .top-btn {
+      padding:.28rem .7rem;border-radius:8px;border:1px solid var(--border);
+      background:var(--surface3);color:var(--muted);font-size:.78rem;font-weight:600;
+      cursor:pointer;font-family:inherit;transition:all .18s;
+    }
+    .top-btn.active { background:rgba(145,71,255,.15);border-color:rgba(145,71,255,.4);color:var(--twitch); }
+  </style>`);
+
+  // ── Bot toggle ──
+  var currentTopCount = 3;
+
+  function setBotToggleUI(enabled) {
+    var btn   = document.getElementById('botToggle');
+    var thumb = document.getElementById('botThumb');
+    if (!btn || !thumb) return;
+    btn.style.background  = enabled ? '#9147ff' : 'var(--surface3)';
+    thumb.style.transform = enabled ? 'translateX(20px)' : 'translateX(0)';
+    btn.dataset.enabled   = enabled ? 'true' : 'false';
+  }
+
+  function setTopBtn(val) {
+    currentTopCount = val;
+    document.querySelectorAll('.top-btn').forEach(function(b) {
+      b.classList.toggle('active', parseInt(b.getAttribute('data-value')) === val);
+    });
+  }
+
+  async function initBotToggle() {
+    try {
+      var res  = await fetch('/api/admin/settings/bot');
+      var data = await res.json();
+      setBotToggleUI(data.enabled);
+      setTopBtn(data.topCount || 3);
+      var status = document.getElementById('botStatus');
+      if (status) {
+        status.textContent   = data.connected ? '🟢 Conectado' : '⚫ Desconectado';
+        status.style.color   = data.connected ? '#4ade80' : 'var(--muted)';
+      }
+    } catch(e) { console.error('initBotToggle:', e); }
+  }
+
+  document.getElementById('botToggle').addEventListener('click', async function() {
+    var btn     = document.getElementById('botToggle');
+    var current = btn.dataset.enabled === 'true';
+    var next    = !current;
+    setBotToggleUI(next);
+    try {
+      var res  = await fetch('/api/admin/settings/bot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: next, topCount: currentTopCount })
+      });
+      var data = await res.json();
+      setBotToggleUI(data.enabled);
+      var status = document.getElementById('botStatus');
+      if (status) {
+        setTimeout(async function() {
+          var r2 = await fetch('/api/admin/settings/bot');
+          var d2 = await r2.json();
+          status.textContent = d2.connected ? '🟢 Conectado' : '⚫ Desconectado';
+          status.style.color = d2.connected ? '#4ade80' : 'var(--muted)';
+        }, 2000);
+      }
+    } catch(e) {
+      console.error('botToggle:', e);
+      setBotToggleUI(current);
+    }
+  });
+
+  document.querySelectorAll('.top-btn').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      var val     = parseInt(btn.getAttribute('data-value'));
+      var enabled = document.getElementById('botToggle').dataset.enabled === 'true';
+      setTopBtn(val);
+      try {
+        await fetch('/api/admin/settings/bot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled, topCount: val })
+        });
+      } catch(e) { console.error('setTop:', e); }
+    });
+  });
+
+  initBotToggle();
+
   function setToggleUI(enabled) {
     var btn   = document.getElementById('reactionsToggle');
     var thumb = document.getElementById('reactionsThumb');

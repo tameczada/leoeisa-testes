@@ -184,6 +184,44 @@ router.post("/reset-all-votes", async (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
+// GET /api/admin/settings/bot — status do bot
+router.get("/settings/bot", async (_req: Request, res: Response) => {
+  const { getBotStatus } = await import("../lib/twitchBot");
+  const [enabledS, topS] = await Promise.all([
+    prisma.setting.findUnique({ where: { key: "bot_enabled" } }),
+    prisma.setting.findUnique({ where: { key: "bot_top_count" } }),
+  ]);
+  res.json({
+    enabled:  enabledS?.value === "true",
+    topCount: parseInt(topS?.value || "3"),
+    connected: getBotStatus(),
+  });
+});
+
+// POST /api/admin/settings/bot — ativa/desativa e configura
+router.post("/settings/bot", async (req: Request, res: Response) => {
+  const { enabled, topCount } = req.body as { enabled: boolean; topCount: number };
+  const { startBot, stopBot } = await import("../lib/twitchBot");
+
+  await Promise.all([
+    prisma.setting.upsert({
+      where:  { key: "bot_enabled" },
+      update: { value: enabled ? "true" : "false" },
+      create: { key: "bot_enabled", value: enabled ? "true" : "false" },
+    }),
+    prisma.setting.upsert({
+      where:  { key: "bot_top_count" },
+      update: { value: String(topCount || 3) },
+      create: { key: "bot_top_count", value: String(topCount || 3) },
+    }),
+  ]);
+
+  if (enabled) await startBot();
+  else await stopBot();
+
+  res.json({ success: true, enabled, topCount: topCount || 3 });
+});
+
 // GET /api/admin/settings/reactions — status atual
 router.get("/settings/reactions", async (_req: Request, res: Response) => {
   const s = await prisma.setting.findUnique({ where: { key: "reactions_enabled" } });
