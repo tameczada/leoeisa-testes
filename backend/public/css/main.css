@@ -187,16 +187,66 @@ header {
 }
 .reaction-pick-btn:hover { transform: scale(1.3); background: var(--surface2); }
 
-/* Lista mode */
-.grid.list-view .reactions-wrap { padding-top: .4rem; flex-basis: 100%; }
+/* ── View toggle button ── */
+.view-toggle {
+  display: flex; align-items: center; gap: .4rem;
+  padding: 0 clamp(1rem,5vw,3rem) .8rem;
+  justify-content: flex-end;
+}
+.view-toggle-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: .42rem .6rem; cursor: pointer;
+  color: var(--muted); display: flex; align-items: center; justify-content: center;
+  transition: all .18s;
+}
+.view-toggle-btn:hover { border-color: #3a3d50; color: var(--text); }
+.view-toggle-btn.active { background: var(--surface2); border-color: var(--twitch); color: var(--twitch); }
+.view-toggle-btn svg { width: 16px; height: 16px; display: block; }
 
-/* ── View toggle ── */
+/* ── Grid (padrão) ── */
 .grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
   gap: 1.4rem; padding: 0 clamp(1rem,5vw,3rem) 4rem; position: relative; z-index: 1;
 }
+.empty { grid-column: 1/-1; }
+
+/* ── List view ── */
+.grid.list-view {
+  grid-template-columns: 1fr;
+  gap: .75rem;
+}
+.grid.list-view .card {
+  display: flex; flex-direction: row;
+  transform: none !important;
+}
+.grid.list-view .card:hover { transform: none !important; border-color: #3a3d50; }
+.grid.list-view .card-poster {
+  width: 140px; min-width: 140px; aspect-ratio: unset;
+  height: auto; flex-shrink: 0;
+  border-radius: 0;
+}
+.grid.list-view .card-poster img { height: 100%; object-fit: cover; }
+.grid.list-view .card-rank { font-size: 1.1rem; }
+.grid.list-view .card-body {
+  flex: 1; display: flex; flex-wrap: wrap; align-items: flex-start;
+  gap: .5rem; padding: .85rem 1.1rem;
+}
+.grid.list-view .card-title {
+  font-size: 1rem; flex-basis: 100%; margin-bottom: 0;
+}
+.grid.list-view .card-meta { margin-bottom: 0; font-size: .74rem; }
+.grid.list-view .card-description { flex-basis: 100%; font-size: .72rem; margin-bottom: 0; }
+.grid.list-view .progress-wrap { flex-basis: 100%; margin-bottom: .5rem; }
+.grid.list-view .btn-vote { width: auto; padding: .5rem 1.1rem; flex-shrink: 0; }
+.grid.list-view .reactions-wrap { padding-top: 0; flex-basis: 100%; }
+
+@media (max-width: 520px) {
+  .grid.list-view .card-poster { width: 90px; min-width: 90px; }
+  .grid.list-view .card-body { padding: .7rem .8rem; }
+}
 .empty { grid-column: 1/-1; text-align: center; padding: 4rem 1rem; color: var(--muted); }
 .empty svg { width: 52px; height: 52px; margin-bottom: 1rem; opacity: .25; display: block; margin-inline: auto; }
+.grid.list-view .empty { grid-column: 1/-1; }
 
 
 .card {
