@@ -33,6 +33,7 @@
   .log-badge.MOVIE_EDIT   { background: rgba(245,158,11,.12); color: var(--admin); border: 1px solid rgba(245,158,11,.25); }
   .log-badge.RESET_ALL    { background: rgba(239,68,68,.18);  color: #fca5a5; border: 1px solid rgba(239,68,68,.35); }
   .log-badge.RESET_MOVIE  { background: rgba(249,115,22,.12); color: #fb923c; border: 1px solid rgba(249,115,22,.25); }
+  .log-badge.REACTION     { background: rgba(236,72,153,.12);  color: #f472b6; border: 1px solid rgba(236,72,153,.25); }
 
   .log-user { display: flex; align-items: center; gap: .5rem; }
   .log-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
@@ -204,6 +205,7 @@
         <a href="/admin/logs?action=MOVIE_EDIT&search=<%= search %>" class="filter-chip <%= activeAction === 'MOVIE_EDIT' ? 'active' : '' %>">✏️ Edições</a>
         <a href="/admin/logs?action=RESET_ALL&search=<%= search %>" class="filter-chip <%= activeAction === 'RESET_ALL' ? 'active' : '' %>">⚠️ Reset Geral</a>
         <a href="/admin/logs?action=RESET_MOVIE&search=<%= search %>" class="filter-chip <%= activeAction === 'RESET_MOVIE' ? 'active' : '' %>">🔄 Reset Filme</a>
+        <a href="/admin/logs?action=REACTION&search=<%= search %>" class="filter-chip <%= activeAction === 'REACTION' ? 'active' : '' %>">😀 Reações</a>
       </div>
     </div>
 
@@ -234,7 +236,8 @@
                   MOVIE_REMOVE: { icon: '🗑', text: 'Filme Removido' },
                   MOVIE_EDIT:   { icon: '✏️', text: 'Filme Editado' },
                   RESET_ALL:    { icon: '⚠️', text: 'Reset Geral' },
-                  RESET_MOVIE:  { icon: '🔄', text: 'Reset Filme' }
+                  RESET_MOVIE:  { icon: '🔄', text: 'Reset Filme' },
+                  REACTION:     { icon: '😀', text: 'Reação' }
                 }; var lbl = labels[log.action] || { icon: '•', text: log.action }; %>
                 <span class="log-badge <%= log.action %>">
                   <%= lbl.icon %> <%= lbl.text %>
@@ -268,6 +271,9 @@
                 <% } else if (log.action === 'VOTE_RETURN') { %>
                   <div class="log-name"><%= log.meta && log.meta.targetDisplayName ? log.meta.targetDisplayName : '—' %></div>
                   <div class="log-sub"><%= log.meta && log.meta.votesReturned ? log.meta.votesReturned + ' voto(s) devolvido(s)' : '' %></div>
+                <% } else if (log.action === 'REACTION') { %>
+                  <div class="log-name"><%= log.movie ? log.movie.title : (log.meta && log.meta.title ? log.meta.title : '—') %></div>
+                  <div class="log-sub"><%= log.meta && log.meta.emoji ? log.meta.emoji + (log.meta.removed ? ' removida' : ' adicionada') : '' %></div>
                 <% } else if (log.action === 'RESET_ALL') { %>
                   <span style="color:var(--muted);font-size:.78rem;">todos os votos</span>
                 <% } else { %>

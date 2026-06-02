@@ -8,7 +8,8 @@ export type LogAction =
   | "MOVIE_REMOVE"
   | "MOVIE_EDIT"
   | "RESET_ALL"
-  | "RESET_MOVIE";
+  | "RESET_MOVIE"
+  | "REACTION";
 
 interface LogParams {
   action: LogAction;
@@ -25,12 +26,10 @@ export async function writeLog(params: LogParams): Promise<void> {
   try {
     await prisma.log.create({
       data: {
-        action: params.action,
-        userId: params.userId ?? null,
+        action:  params.action,
+        userId:  params.userId  ?? null,
         movieId: params.movieId ?? null,
-        meta: params.meta
-          ? (params.meta as Prisma.InputJsonValue)
-          : undefined,
+        meta:    params.meta != null ? params.meta as Prisma.InputJsonValue : undefined,
       },
     });
   } catch (err) {

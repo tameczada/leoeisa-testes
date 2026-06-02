@@ -1,10 +1,11 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth } from "../middleware/auth";
+import { writeLog } from "../lib/logger";
 
 const router = Router();
 
-const ALLOWED_EMOJIS = ["🔥", "❤️", "😂", "😮", "👏", "💀","💕","🙏","👀","🤓","😠","💩","🥱","💯","👌","👍"];
+const ALLOWED_EMOJIS = ["🔥", "❤️", "😂", "😮", "👏", "💀"];
 
 // GET /api/reactions — busca contagens de TODOS os filmes de uma vez
 router.get("/", async (req: Request, res: Response) => {
@@ -114,6 +115,14 @@ router.post("/:movieId", requireAuth, async (req: Request, res: Response) => {
   const mine = await prisma.reaction.findMany({
     where: { movieId, userId },
     select: { emoji: true },
+  });
+
+  // ── Log ──
+  await writeLog({
+    action:  "REACTION",
+    userId,
+    movieId,
+    meta: { emoji, removed: !!existing },
   });
 
   res.json({ counts, userReactions: mine.map((r) => r.emoji) });
