@@ -226,7 +226,7 @@ header {
   border-radius: 0;
 }
 .grid.list-view .card-poster img { height: 100%; object-fit: cover; }
-.grid.list-view .card-rank { font-size: 1.1rem; }
+.grid.list-view .card-rank {position:absolute; font-size: 1.1rem; top:50%; left:8px; }
 .grid.list-view .card-body {
   flex: 1; display: flex; flex-wrap: wrap; align-items: flex-start;
   gap: .5rem; padding: .85rem 1.1rem;
@@ -269,7 +269,7 @@ header {
 .card-rank {
   position: absolute; top: 8px; left: 10px;
   font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem;
-  color: rgba(255,255,255,.15); line-height: 1;
+  color: rgba(255,255,255,.70); line-height: 1;
 }
 .card-body { padding: 1rem 1.1rem 1.2rem; }
 .card-title { font-size: 1rem; font-weight: 600; line-height: 1.2; margin-bottom: .2rem; }
