@@ -4,7 +4,7 @@ import { requireAuth } from "../middleware/auth";
 
 const router = Router();
 
-const ALLOWED_EMOJIS = ["🔥", "❤️", "😂", "😮", "👏", "💀"];
+const ALLOWED_EMOJIS = ["🔥", "❤️", "😂", "😮", "👏", "💀","💕","🙏","👀","🤓","😠","💩","🥱","💯","👌","👍"];
 
 // GET /api/reactions/:movieId — busca contagens e reações do usuário
 router.get("/:movieId", async (req: Request, res: Response) => {
