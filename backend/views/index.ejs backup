@@ -268,39 +268,16 @@ Fica terminantemente proibida a indicação de:
     });
   }
 
-  async function loadReactions() {
+  function loadReactions() {
     if (!reactionsEnabled) return;
-
-    const wraps = document.querySelectorAll(
-      '.reactions-wrap[data-movie-id]'
-    );
-
-    for (const wrap of wraps) {
-      const movieId = wrap.getAttribute('data-movie-id');
-
-      try {
-        const response = await fetch('/api/reactions/' + movieId);
-
-        if (!response.ok) continue;
-
-        const data = await response.json();
-
-        if (!data.enabled) continue;
-
-        renderDisplay(
-          wrap,
-          data.counts,
-          data.userReactions
-        );
-
-        // evita explosão de requests simultâneos
-        await new Promise(resolve => setTimeout(resolve, 80));
-
-      } catch (err) {
-        console.error('Reaction load error:', err);
-      }
-    }
-  });
+    document.querySelectorAll('.reactions-wrap[data-movie-id]').forEach(function(wrap) {
+      var movieId = wrap.getAttribute('data-movie-id');
+      fetch('/api/reactions/' + movieId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.enabled) return;
+          renderDisplay(wrap, data.counts, data.userReactions);
+        });
     });
   }
 
