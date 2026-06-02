@@ -232,16 +232,16 @@ header {
   gap: .5rem; padding: .85rem 1.1rem;
 }
 .grid.list-view .card-title {
-  font-size: 1rem; flex-basis: 100%; margin-bottom: 0;
+  font-size: 0.8rem; flex-basis: 100%; margin-bottom: 0;
 }
-.grid.list-view .card-meta { margin-bottom: 0; font-size: .74rem; }
-.grid.list-view .card-description { flex-basis: 100%; font-size: .72rem; margin-bottom: 0; }
-.grid.list-view .progress-wrap { flex-basis: 100%; margin-bottom: .5rem; }
-.grid.list-view .btn-vote { width: auto; padding: .5rem 1.1rem; flex-shrink: 0; }
+.grid.list-view .card-meta { margin-bottom: 0; font-size: .70rem; }
+.grid.list-view .card-description { flex-basis: 100%; font-size: .70rem; margin-bottom: 0; }
+.grid.list-view .progress-wrap { flex-basis: 90%; margin-bottom: .5rem; }
+.grid.list-view .btn-vote { width: auto; padding: .4rem 1.0rem; flex-shrink: 0; }
 .grid.list-view .reactions-wrap { padding-top: 0; flex-basis: 100%; }
 
 @media (max-width: 520px) {
-  .grid.list-view .card-poster { width: 90px; min-width: 90px; }
+  .grid.list-view .card-poster { width: 100px; min-width: 90px; }
   .grid.list-view .card-body { padding: .7rem .8rem; }
 }
 .empty { grid-column: 1/-1; text-align: center; padding: 4rem 1rem; color: var(--muted); }
