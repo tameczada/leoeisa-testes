@@ -6,6 +6,40 @@ const router = Router();
 
 const ALLOWED_EMOJIS = ["🔥", "❤️", "😂", "😮", "👏", "💀","💕","🙏","👀","🤓","😠","💩","🥱","💯","👌","👍"];
 
+// GET /api/reactions — busca contagens de TODOS os filmes de uma vez
+router.get("/", async (req: Request, res: Response) => {
+  const setting = await prisma.setting.findUnique({ where: { key: "reactions_enabled" } });
+  if (!setting || setting.value !== "true") {
+    return res.json({ enabled: false, data: {} });
+  }
+
+  const raw = await prisma.reaction.groupBy({
+    by: ["movieId", "emoji"],
+    _count: { emoji: true },
+  });
+
+  // Monta { movieId: { emoji: count } }
+  const counts: Record<string, Record<string, number>> = {};
+  for (const r of raw) {
+    if (!counts[r.movieId]) counts[r.movieId] = {};
+    counts[r.movieId][r.emoji] = r._count.emoji;
+  }
+
+  let userReactions: Record<string, string[]> = {};
+  if (req.session.userId) {
+    const mine = await prisma.reaction.findMany({
+      where: { userId: req.session.userId },
+      select: { movieId: true, emoji: true },
+    });
+    for (const r of mine) {
+      if (!userReactions[r.movieId]) userReactions[r.movieId] = [];
+      userReactions[r.movieId].push(r.emoji);
+    }
+  }
+
+  res.json({ enabled: true, counts, userReactions });
+});
+
 // GET /api/reactions/:movieId — busca contagens e reações do usuário
 router.get("/:movieId", async (req: Request, res: Response) => {
   const { movieId } = req.params;

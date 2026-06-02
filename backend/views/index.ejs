@@ -118,7 +118,7 @@
           </button>
           <!-- Picker (oculto por padrão) -->
           <div class="reaction-picker" style="display:none;">
-            <% ["🔥", "❤️", "😂", "😮", "👏", "💀","💕","🙏","👀","🤓","😠","💩","🥱","💯","👌","👍"].forEach(function(emoji) { %>
+            <% ['🔥','❤️','😂','😮','👏','💀'].forEach(function(emoji) { %>
               <button class="reaction-pick-btn" data-emoji="<%= emoji %>" data-movie-id="<%= movie.id %>"><%= emoji %></button>
             <% }); %>
           </div>
@@ -251,7 +251,7 @@ Fica terminantemente proibida a indicação de:
   // ── Reactions ──
   var reactionsEnabled = <%= reactionsEnabled %>;
 
-  var EMOJIS = ["🔥", "❤️", "😂", "😮", "👏", "💀","💕","🙏","👀","🤓","😠","💩","🥱","💯","👌","👍"];
+  var EMOJIS = ['🔥','❤️','😂','😮','👏','💀'];
 
   function renderDisplay(wrap, counts, userReactions) {
     var display = wrap.querySelector('.reactions-display');
@@ -270,15 +270,17 @@ Fica terminantemente proibida a indicação de:
 
   function loadReactions() {
     if (!reactionsEnabled) return;
-    document.querySelectorAll('.reactions-wrap[data-movie-id]').forEach(function(wrap) {
-      var movieId = wrap.getAttribute('data-movie-id');
-      fetch('/api/reactions/' + movieId)
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (!data.enabled) return;
-          renderDisplay(wrap, data.counts, data.userReactions);
+    fetch('/api/reactions')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.enabled) return;
+        document.querySelectorAll('.reactions-wrap[data-movie-id]').forEach(function(wrap) {
+          var movieId = wrap.getAttribute('data-movie-id');
+          var counts  = data.counts[movieId] || {};
+          var mine    = data.userReactions[movieId] || [];
+          renderDisplay(wrap, counts, mine);
         });
-    });
+      });
   }
 
   // Fechar pickers abertos ao clicar fora
