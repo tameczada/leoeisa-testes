@@ -126,8 +126,8 @@
             Reagir
           </button>
           <!-- Picker (oculto por padrão) -->
-          <div class="reaction-picker" style="display:none;">
-            <% ['🔥','❤️','😂','😮','👏','💀'].forEach(function(emoji) { %>
+          <div class="reaction-picker" style="display:none; overflow: auto;">
+            <% ["🔥", "❤️", "😂", "😮", "👏", "💀","💕","🙏","👀","🤓","😠","💩","🥱","💯","👌","👍"].forEach(function(emoji) { %>
               <button class="reaction-pick-btn" data-emoji="<%= emoji %>" data-movie-id="<%= movie.id %>"><%= emoji %></button>
             <% }); %>
           </div>
@@ -260,7 +260,7 @@ Fica terminantemente proibida a indicação de:
   // ── Reactions ──
   var reactionsEnabled = <%= reactionsEnabled %>;
 
-  var EMOJIS = ['🔥','❤️','😂','😮','👏','💀'];
+  var EMOJIS = ["🔥", "❤️", "😂", "😮", "👏", "💀","💕","🙏","👀","🤓","😠","💩","🥱","💯","👌","👍"];
 
   function renderDisplay(wrap, counts, userReactions) {
     var display = wrap.querySelector('.reactions-display');

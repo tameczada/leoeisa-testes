@@ -179,7 +179,11 @@ header {
   border-radius: 12px; padding: .4rem .5rem;
   box-shadow: 0 8px 24px rgba(0,0,0,.35);
   z-index: 50;
+  overflow-x: auto; max-width: 90vw;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.reaction-picker::-webkit-scrollbar { display: none; }
 .reaction-pick-btn {
   font-size: 1.3rem; background: none; border: none;
   cursor: pointer; padding: .2rem .15rem; border-radius: 6px;
