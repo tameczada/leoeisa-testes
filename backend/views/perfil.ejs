@@ -1,0 +1,172 @@
+<%- include('partials/head') %>
+<style>
+  .perfil-wrap {
+    max-width: 680px; margin: 0 auto;
+    padding: 2rem clamp(1rem,5vw,2rem) 5rem;
+  }
+
+  /* Hero do perfil */
+  .perfil-hero {
+    display: flex; align-items: center; gap: 1.2rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.4rem 1.6rem; margin-bottom: 1.5rem;
+  }
+  .perfil-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    border: 3px solid var(--twitch); object-fit: cover; flex-shrink: 0;
+  }
+  .perfil-avatar-placeholder {
+    width: 72px; height: 72px; border-radius: 50%;
+    border: 3px solid var(--twitch); background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; font-weight: 700; color: var(--twitch); flex-shrink: 0;
+  }
+  .perfil-info { flex: 1; }
+  .perfil-name { font-size: 1.3rem; font-weight: 700; margin-bottom: .2rem; }
+  .perfil-username { font-size: .82rem; color: var(--muted); margin-bottom: .5rem; }
+  .perfil-since { font-size: .75rem; color: var(--muted); }
+
+  /* Stats */
+  .perfil-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: .75rem; margin-bottom: 1.5rem;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem; text-align: center;
+  }
+  .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--twitch); line-height: 1; }
+  .stat-label { font-size: .72rem; color: var(--muted); margin-top: .3rem; text-transform: uppercase; letter-spacing: .8px; }
+
+  /* Seções */
+  .perfil-section { margin-bottom: 1.8rem; }
+  .perfil-section-title {
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.2px; color: var(--muted); margin-bottom: .8rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .perfil-section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* Lista de filmes votados */
+  .voted-movie {
+    display: flex; align-items: center; gap: .85rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: .65rem .9rem; margin-bottom: .5rem;
+  }
+  .voted-poster {
+    width: 38px; height: 54px; border-radius: 6px;
+    object-fit: cover; flex-shrink: 0; background: var(--surface2);
+  }
+  .voted-poster-ph {
+    width: 38px; height: 54px; border-radius: 6px;
+    background: var(--surface2); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: .7rem;
+  }
+  .voted-info { flex: 1; min-width: 0; }
+  .voted-title { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .voted-meta { font-size: .72rem; color: var(--muted); margin-top: .15rem; }
+  .voted-rank { font-size: .75rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+
+  /* Reações */
+  .reactions-list { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .reaction-item {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: .3rem .7rem; font-size: .82rem;
+  }
+  .reaction-item img { width: 18px; height: 18px; object-fit: contain; }
+  .reaction-item .ri-movie { font-size: .7rem; color: var(--muted); }
+
+  .empty-state { text-align: center; color: var(--muted); font-size: .85rem; padding: 1.5rem 0; }
+
+  @media (max-width: 480px) {
+    .perfil-stats { grid-template-columns: repeat(3, 1fr); }
+    .stat-value { font-size: 1.3rem; }
+  }
+</style>
+<%- include('partials/header') %>
+
+<div class="perfil-wrap">
+
+  <!-- Hero -->
+  <div class="perfil-hero">
+    <% if (user.profileImage) { %>
+      <img class="perfil-avatar" src="<%= user.profileImage %>" alt="<%= user.displayName %>">
+    <% } else { %>
+      <div class="perfil-avatar-placeholder"><%= user.displayName.charAt(0).toUpperCase() %></div>
+    <% } %>
+    <div class="perfil-info">
+      <div class="perfil-name"><%= user.displayName %></div>
+      <div class="perfil-username">@<%= user.username %></div>
+      <div class="perfil-since">Membro desde <%= new Date(user.createdAt).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) %></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="perfil-stats">
+    <div class="stat-card">
+      <div class="stat-value"><%= totalVotes %></div>
+      <div class="stat-label">Votos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= totalReactions %></div>
+      <div class="stat-label">Reações</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">#<%= ranking %></div>
+      <div class="stat-label">Ranking</div>
+    </div>
+  </div>
+
+  <!-- Filmes votados -->
+  <div class="perfil-section">
+    <div class="perfil-section-title">Filmes votados</div>
+    <% if (votedMovies.length === 0) { %>
+      <div class="empty-state">Você ainda não votou em nenhum filme.</div>
+    <% } else { %>
+      <% votedMovies.forEach(function(item) { %>
+      <div class="voted-movie">
+        <% if (item.movie.poster) { %>
+          <img class="voted-poster" src="<%= item.movie.poster %>" alt="<%= item.movie.title %>">
+        <% } else { %>
+          <div class="voted-poster-ph">🎬</div>
+        <% } %>
+        <div class="voted-info">
+          <div class="voted-title"><%= item.movie.title %></div>
+          <div class="voted-meta"><%= item.movie.year %> · <%= item.movie.category %></div>
+        </div>
+        <div class="voted-rank"><%= item.movie.voteCount %> votos</div>
+      </div>
+      <% }); %>
+    <% } %>
+  </div>
+
+  <!-- Reações dadas -->
+  <div class="perfil-section">
+    <div class="perfil-section-title">Reações dadas</div>
+    <% if (reactions.length === 0) { %>
+      <div class="empty-state">Você ainda não reagiu a nenhum filme.</div>
+    <% } else { %>
+      <div class="reactions-list">
+        <% reactions.forEach(function(r) { %>
+        <div class="reaction-item">
+          <% if (r.isCustom) { %>
+            <img src="<%= r.imageUrl %>" alt="<%= r.emoji %>">
+          <% } else { %>
+            <span><%= r.emoji %></span>
+          <% } %>
+          <span class="ri-movie"><%= r.movieTitle %></span>
+        </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+
+</div>
+
+<script src="/js/main.js"></script>
+</body>
+</html>

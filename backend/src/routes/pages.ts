@@ -221,4 +221,64 @@ router.get("/admin/logs", requireAdmin, async (req: Request, res: Response) => {
   });
 });
 
+// GET /perfil — página de perfil do usuário logado
+router.get("/perfil", async (req: Request, res: Response) => {
+  if (!req.session.userId) return res.redirect("/auth/twitch");
+
+  const userId = req.session.userId;
+
+  const [user, votes, reactions, allUsers, customEmotes] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId } }),
+    prisma.vote.findMany({
+      where:   { userId },
+      orderBy: { createdAt: "desc" },
+      include: { movie: { select: { title: true, year: true, category: true, poster: true, voteCount: true } } },
+    }),
+    prisma.reaction.findMany({
+      where:   { userId },
+      orderBy: { createdAt: "desc" },
+      include: { movie: { select: { title: true } } },
+    }),
+    // Ranking: conta votos por usuário
+    prisma.vote.groupBy({
+      by:      ["userId"],
+      _count:  { userId: true },
+      orderBy: { _count: { userId: "desc" } },
+    }),
+    prisma.customEmote.findMany({ select: { name: true, imageUrl: true } }),
+  ]);
+
+  if (!user) return res.redirect("/");
+
+  // Posição no ranking
+  const rankIndex = allUsers.findIndex((u) => u.userId === userId);
+  const ranking   = rankIndex >= 0 ? rankIndex + 1 : allUsers.length + 1;
+
+  // Enriquece reações com info de emote customizado
+  const customMap = new Map(customEmotes.map((e) => [e.name, e.imageUrl]));
+  const enrichedReactions = reactions.map((r) => ({
+    emoji:      r.emoji,
+    movieTitle: r.movie.title,
+    isCustom:   customMap.has(r.emoji),
+    imageUrl:   customMap.get(r.emoji) || null,
+  }));
+
+  res.render("perfil", {
+    user: {
+      ...user,
+      id:           user.id,
+      username:     user.username,
+      displayName:  user.displayName,
+      profileImage: user.profileImage,
+      isAdmin:      user.isAdmin,
+      createdAt:    user.createdAt,
+    },
+    totalVotes:     votes.length,
+    totalReactions: reactions.length,
+    ranking,
+    votedMovies:    votes,
+    reactions:      enrichedReactions,
+  });
+});
+
 export default router;

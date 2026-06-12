@@ -13,12 +13,14 @@
         </a>
       <% } %>
       <div class="user-pill">
-        <% if (user.profileImage) { %>
-          <img src="<%= user.profileImage %>" alt="<%= user.displayName %>" class="user-avatar-img">
-        <% } else { %>
-          <div class="user-avatar"><%= user.displayName.charAt(0).toUpperCase() %></div>
-        <% } %>
-        <span class="user-name"><%= user.displayName %></span>
+        <a href="/perfil" style="display:flex;align-items:center;gap:.4rem;text-decoration:none;color:inherit;">
+          <% if (user.profileImage) { %>
+            <img src="<%= user.profileImage %>" alt="<%= user.displayName %>" class="user-avatar-img">
+          <% } else { %>
+            <div class="user-avatar"><%= user.displayName.charAt(0).toUpperCase() %></div>
+          <% } %>
+          <span class="user-name"><%= user.displayName %></span>
+        </a>
         <form action="/auth/logout" method="POST" style="margin:0">
           <button type="submit" class="btn-logout">Sair</button>
         </form>
