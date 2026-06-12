@@ -6,6 +6,7 @@ import { prisma } from "../lib/prisma";
 import { requireAdmin } from "../middleware/auth";
 import { writeLog } from "../lib/logger";
 import { uploadEmote, deleteEmote } from "../lib/supabaseStorage";
+import { notifyMovieAdded, startBot, stopBot, getBotStatus, restartBot } from "../lib/twitchBot";
 
 const router = Router();
 
@@ -92,6 +93,10 @@ router.post("/movies", upload.single("poster"), async (req: Request, res: Respon
     movieId: movie.id,
     meta:    { title: movie.title, year: movie.year, category: movie.category },
   });
+
+  // ── Notifica bot ──
+  notifyMovieAdded({ title: movie.title, year: movie.year, category: movie.category })
+    .catch(() => {});
 
   res.status(201).json(movie);
 });
@@ -257,6 +262,49 @@ router.patch("/emotes/:id/toggle", async (req: Request, res: Response) => {
     data:  { active: !emote.active },
   });
   res.json(updated);
+});
+
+// GET /api/admin/settings/bot
+router.get("/settings/bot", async (_req: Request, res: Response) => {
+  const [enabledS, templateS] = await Promise.all([
+    prisma.setting.findUnique({ where: { key: "bot_enabled" } }),
+    prisma.setting.findUnique({ where: { key: "bot_message_template" } }),
+  ]);
+  res.json({
+    enabled:   enabledS?.value === "true",
+    template:  templateS?.value || "🎬 Novo filme adicionado: {titulo} ({ano}) - {categoria}",
+    connected: getBotStatus(),
+  });
+});
+
+// POST /api/admin/settings/bot
+router.post("/settings/bot", async (req: Request, res: Response) => {
+  const { enabled, template } = req.body as { enabled?: boolean; template?: string };
+
+  const ops: Promise<any>[] = [];
+
+  if (enabled !== undefined) {
+    ops.push(prisma.setting.upsert({
+      where:  { key: "bot_enabled" },
+      update: { value: enabled ? "true" : "false" },
+      create: { key: "bot_enabled", value: enabled ? "true" : "false" },
+    }));
+  }
+
+  if (template !== undefined) {
+    ops.push(prisma.setting.upsert({
+      where:  { key: "bot_message_template" },
+      update: { value: template },
+      create: { key: "bot_message_template", value: template },
+    }));
+  }
+
+  await Promise.all(ops);
+
+  if (enabled === true)  await startBot();
+  if (enabled === false) await stopBot();
+
+  res.json({ success: true, connected: getBotStatus() });
 });
 
 // GET /api/admin/settings/reactions — status atual

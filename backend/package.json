@@ -24,7 +24,8 @@
     "multer-storage-cloudinary": "^2.2.1",
     "node-fetch": "^3.3.2",
     "sharp": "^0.33.4",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "tmi.js": "^1.8.5"
   },
   "devDependencies": {
     "@types/connect-pg-simple": "^7.0.3",
@@ -39,7 +40,8 @@
     "prisma": "^6.7.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.5.2",
-    "@types/ws": "^8.5.10"
+    "@types/ws": "^8.5.10",
+    "@types/tmi.js": "^1.8.6"
   },
   "prisma": {
     "seed": "ts-node src/lib/seed.ts"
