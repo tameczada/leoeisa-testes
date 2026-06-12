@@ -138,3 +138,9 @@ CREATE TABLE "custom_emotes" (
 );
 
 CREATE UNIQUE INDEX "custom_emotes_name_key" ON "custom_emotes"("name");
+
+INSERT INTO "settings" ("key", "value") VALUES ('bot_enabled', 'false');
+INSERT INTO "settings" ("key", "value") VALUES ('bot_message_template', '🎬 Novo filme adicionado: {titulo} ({ano}) - {categoria}');
+
+INSERT INTO "settings" ("key", "value") VALUES ('bot_spawn_count', '1');
+INSERT INTO "settings" ("key", "value") VALUES ('bot_spawn_interval', '1');

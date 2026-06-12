@@ -266,20 +266,29 @@ router.patch("/emotes/:id/toggle", async (req: Request, res: Response) => {
 
 // GET /api/admin/settings/bot
 router.get("/settings/bot", async (_req: Request, res: Response) => {
-  const [enabledS, templateS] = await Promise.all([
+  const [enabledS, templateS, spawnS, intervalS] = await Promise.all([
     prisma.setting.findUnique({ where: { key: "bot_enabled" } }),
     prisma.setting.findUnique({ where: { key: "bot_message_template" } }),
+    prisma.setting.findUnique({ where: { key: "bot_spawn_count" } }),
+    prisma.setting.findUnique({ where: { key: "bot_spawn_interval" } }),
   ]);
   res.json({
     enabled:   enabledS?.value === "true",
     template:  templateS?.value || "🎬 Novo filme adicionado: {titulo} ({ano}) - {categoria}",
+    spawnCount: parseInt(spawnS?.value || "1"),
+    spawnInterval: parseInt(intervalS?.value || "1"),
     connected: getBotStatus(),
   });
 });
 
 // POST /api/admin/settings/bot
 router.post("/settings/bot", async (req: Request, res: Response) => {
-  const { enabled, template } = req.body as { enabled?: boolean; template?: string };
+  const { enabled, template, spawnCount, spawnInterval } = req.body as {
+    enabled?: boolean;
+    template?: string;
+    spawnCount?: number;
+    spawnInterval?: number;
+  };
 
   const ops: Promise<any>[] = [];
 
@@ -290,12 +299,25 @@ router.post("/settings/bot", async (req: Request, res: Response) => {
       create: { key: "bot_enabled", value: enabled ? "true" : "false" },
     }));
   }
-
   if (template !== undefined) {
     ops.push(prisma.setting.upsert({
       where:  { key: "bot_message_template" },
       update: { value: template },
       create: { key: "bot_message_template", value: template },
+    }));
+  }
+  if (spawnCount !== undefined) {
+    ops.push(prisma.setting.upsert({
+      where:  { key: "bot_spawn_count" },
+      update: { value: String(Math.min(10, Math.max(1, spawnCount))) },
+      create: { key: "bot_spawn_count", value: String(Math.min(10, Math.max(1, spawnCount))) },
+    }));
+  }
+  if (spawnInterval !== undefined) {
+    ops.push(prisma.setting.upsert({
+      where:  { key: "bot_spawn_interval" },
+      update: { value: String(Math.max(1, spawnInterval)) },
+      create: { key: "bot_spawn_interval", value: String(Math.max(1, spawnInterval)) },
     }));
   }
 

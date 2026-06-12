@@ -74,18 +74,31 @@ export async function notifyMovieAdded(movie: {
 }): Promise<void> {
   if (!isConnected || !client) return;
 
-  const channel  = process.env.TWITCH_BOT_CHANNEL || "";
-  const setting  = await prisma.setting.findUnique({ where: { key: "bot_message_template" } });
-  const template = setting?.value || "🎬 Novo filme adicionado: {titulo} ({ano}) - {categoria}";
+  const channel = process.env.TWITCH_BOT_CHANNEL || "";
+
+  const [templateS, spawnS, intervalS] = await Promise.all([
+    prisma.setting.findUnique({ where: { key: "bot_message_template" } }),
+    prisma.setting.findUnique({ where: { key: "bot_spawn_count" } }),
+    prisma.setting.findUnique({ where: { key: "bot_spawn_interval" } }),
+  ]);
+
+  const template  = templateS?.value  || "🎬 Novo filme adicionado: {titulo} ({ano}) - {categoria}";
+  const spawns    = Math.min(10, Math.max(1, parseInt(spawnS?.value    || "1")));
+  const intervalMs = Math.max(500, parseInt(intervalS?.value || "1") * 1000);
 
   const message = template
     .replace(/\{titulo\}/gi,    movie.title)
     .replace(/\{ano\}/gi,       String(movie.year))
     .replace(/\{categoria\}/gi, movie.category);
 
-  try {
-    await client.say(`#${channel}`.replace("##", "#"), message);
-  } catch (err) {
-    console.error("[bot] Erro ao enviar mensagem:", err);
+  const ch = `#${channel}`.replace("##", "#");
+
+  for (let i = 0; i < spawns; i++) {
+    if (i > 0) await new Promise(r => setTimeout(r, intervalMs));
+    try {
+      await client!.say(ch, message);
+    } catch (err) {
+      console.error("[bot] Erro ao enviar mensagem:", err);
+    }
   }
 }
