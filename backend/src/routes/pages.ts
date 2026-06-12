@@ -63,6 +63,40 @@ router.get("/", async (req: Request, res: Response) => {
   });
 });
 
+
+router.get("/filmes", async (req: Request, res: Response) => {
+  const { category } = req.query as { category?: string };
+
+  const where: { active: boolean; category?: string } = { active: true };
+  if (category && category !== "todos") where.category = category;
+
+  const movies = await prisma.movie.findMany({
+    where,
+    orderBy: { voteCount: "desc" },
+  });
+
+  let userVotedIds: Set<string> = new Set();
+  if (req.session.userId) {
+    const votes = await prisma.vote.findMany({
+      where: { userId: req.session.userId },
+      select: { movieId: true },
+    });
+    userVotedIds = new Set(votes.map((v: { movieId: string }) => v.movieId));
+  }
+
+  const total = movies.reduce((s: number, m) => s + m.voteCount, 0);
+  const max = movies.length ? Math.max(...movies.map((m) => m.voteCount)) : 0;
+
+  const result = movies.map((m) => ({
+    ...m,
+    hasVoted: userVotedIds.has(m.id),
+    pct: total > 0 ? Math.round((m.voteCount / total) * 100) : 0,
+    barW: max > 0 ? Math.round((m.voteCount / max) * 100) : 0,
+  }));
+
+  res.json({ movies: result, total, max });
+});
+
 // ── Admin pages ──
 
 router.get("/admin", requireAdmin, async (req: Request, res: Response) => {

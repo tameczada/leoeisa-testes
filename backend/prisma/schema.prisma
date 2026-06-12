@@ -117,3 +117,16 @@ model Setting {
 
   @@map("settings")
 }
+
+
+// Emotes customizados — podem ser imagens do Supabase Storage ou URLs externas
+model CustomEmote {
+  id        String   @id
+  name      String   @unique
+  imageUrl  String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("custom_emotes")
+}
+

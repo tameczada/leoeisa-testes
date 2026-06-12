@@ -125,3 +125,16 @@ CREATE TABLE "settings" (
 );
 
 INSERT INTO "settings" ("key", "value") VALUES ('reactions_enabled', 'false');
+
+-- Migration: add_custom_emotes
+
+CREATE TABLE "custom_emotes" (
+  "id"        TEXT         NOT NULL,
+  "name"      TEXT         NOT NULL,
+  "imageUrl"  TEXT         NOT NULL,
+  "active"    BOOLEAN      NOT NULL DEFAULT true,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "custom_emotes_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX "custom_emotes_name_key" ON "custom_emotes"("name");

@@ -292,47 +292,31 @@ Fica terminantemente proibida a indicação de:
     } catch(err) { console.error('loadCustomEmotes:', err); }
   }
 
-  // Mapa de emotes customizados por nome para lookup rápido
-  function getCustomEmoteMap() {
-    var map = {};
-    customEmotes.forEach(function(e) { map[e.name] = e; });
-    return map;
-  }
-
-  function renderDisplay(wrap, counts, userReactions, emojiOrder) {
+  function renderDisplay(wrap, counts, userReactions) {
     var display = wrap.querySelector('.reactions-display');
-    var customMap = getCustomEmoteMap();
-    var movieId = wrap.getAttribute('data-movie-id');
-
-    // Usa emojiOrder do servidor se disponível, senão preserva ordem atual do DOM
-    var ordered;
-    if (emojiOrder && emojiOrder.length > 0) {
-      ordered = emojiOrder.filter(function(e) { return counts[e] > 0; });
-    } else {
-      ordered = [];
-      display.querySelectorAll('.reaction-btn').forEach(function(b) {
-        ordered.push(b.getAttribute('data-emoji'));
-      });
-      Object.keys(counts).forEach(function(e) {
-        if (counts[e] > 0 && ordered.indexOf(e) === -1) ordered.push(e);
-      });
-    }
-
     display.innerHTML = '';
-    ordered.forEach(function(emoji) {
+
+    // Emojis padrão
+    EMOJIS.forEach(function(emoji) {
       var count = counts[emoji] || 0;
       if (count === 0) return;
       var btn = document.createElement('button');
       btn.className = 'reaction-btn' + (userReactions.includes(emoji) ? ' reacted' : '');
       btn.setAttribute('data-emoji', emoji);
-      btn.setAttribute('data-movie-id', movieId);
+      btn.setAttribute('data-movie-id', wrap.getAttribute('data-movie-id'));
+      btn.innerHTML = '<span class="reaction-emoji">' + emoji + '</span><span class="reaction-count">' + count + '</span>';
+      display.appendChild(btn);
+    });
 
-      var custom = customMap[emoji];
-      if (custom) {
-        btn.innerHTML = '<img src="' + custom.imageUrl + '" style="width:18px;height:18px;object-fit:contain;" alt="' + emoji + '"><span class="reaction-count">' + count + '</span>';
-      } else {
-        btn.innerHTML = '<span class="reaction-emoji">' + emoji + '</span><span class="reaction-count">' + count + '</span>';
-      }
+    // Emotes customizados
+    customEmotes.forEach(function(e) {
+      var count = counts[e.name] || 0;
+      if (count === 0) return;
+      var btn = document.createElement('button');
+      btn.className = 'reaction-btn' + (userReactions.includes(e.name) ? ' reacted' : '');
+      btn.setAttribute('data-emoji', e.name);
+      btn.setAttribute('data-movie-id', wrap.getAttribute('data-movie-id'));
+      btn.innerHTML = '<img src="' + e.imageUrl + '" style="width:18px;height:18px;object-fit:contain;" alt="' + e.name + '"><span class="reaction-count">' + count + '</span>';
       display.appendChild(btn);
     });
   }
@@ -347,7 +331,7 @@ Fica terminantemente proibida a indicação de:
           var movieId = wrap.getAttribute('data-movie-id');
           var counts  = data.counts[movieId] || {};
           var mine    = data.userReactions[movieId] || [];
-          renderDisplay(wrap, counts, mine, data.emojiOrder ? data.emojiOrder[movieId] : null);
+          renderDisplay(wrap, counts, mine);
         });
       });
   }
@@ -394,7 +378,7 @@ Fica terminantemente proibida a indicação de:
       })
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        renderDisplay(wrap, data.counts || {}, Array.isArray(data.userReactions) ? data.userReactions : [], data.emojiOrder || null);
+        renderDisplay(wrap, data.counts || {}, Array.isArray(data.userReactions) ? data.userReactions : []);
       });
       return;
     }
@@ -417,7 +401,7 @@ Fica terminantemente proibida a indicação de:
       })
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        renderDisplay(wrap, data.counts || {}, Array.isArray(data.userReactions) ? data.userReactions : [], data.emojiOrder || null);
+        renderDisplay(wrap, data.counts || {}, Array.isArray(data.userReactions) ? data.userReactions : []);
       });
     }
   });

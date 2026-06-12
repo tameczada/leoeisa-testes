@@ -182,6 +182,7 @@ document.addEventListener("click", (e) => {
   const resetBtn = e.target.closest("[data-action='reset']");
   const deleteBtn = e.target.closest("[data-action='delete']");
   const resetAllBtn = e.target.closest("[data-action='reset-all']");
+  const exportBtn = e.target.closest("[data-action='exportMovieBtn']");
 
   if (btn) {
     const { id, title, delta } = btn.dataset;
@@ -200,6 +201,10 @@ document.addEventListener("click", (e) => {
   }
   if (resetAllBtn) {
     resetAllVotes();
+    return;
+  }
+  if (exportBtn) {
+      exportJson();
     return;
   }
 });

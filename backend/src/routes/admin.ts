@@ -5,6 +5,7 @@ import fs from "fs";
 import { prisma } from "../lib/prisma";
 import { requireAdmin } from "../middleware/auth";
 import { writeLog } from "../lib/logger";
+import { uploadEmote, deleteEmote } from "../lib/supabaseStorage";
 
 const router = Router();
 
@@ -14,7 +15,8 @@ router.use(requireAdmin);
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-const storage = multer.diskStorage({
+// Disk storage — usado para posters de filmes (salvos localmente)
+const diskStorage = multer.diskStorage({
   destination: (_req: Request, _file: Express.Multer.File, cb: (e: Error | null, dest: string) => void) =>
     cb(null, UPLOAD_DIR),
   filename: (_req: Request, file: Express.Multer.File, cb: (e: Error | null, name: string) => void) => {
@@ -23,8 +25,18 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({
-  storage,
+  storage: diskStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Only images allowed"));
+  },
+});
+
+// Memory storage — usado para emotes (enviados pro Supabase Storage)
+const uploadMemory = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter: (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
     if (file.mimetype.startsWith("image/")) cb(null, true);
     else cb(new Error("Only images allowed"));
@@ -184,42 +196,67 @@ router.post("/reset-all-votes", async (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
-// GET /api/admin/settings/bot — status do bot
-router.get("/settings/bot", async (_req: Request, res: Response) => {
-  const { getBotStatus } = await import("../lib/twitchBot");
-  const [enabledS, topS] = await Promise.all([
-    prisma.setting.findUnique({ where: { key: "bot_enabled" } }),
-    prisma.setting.findUnique({ where: { key: "bot_top_count" } }),
-  ]);
-  res.json({
-    enabled:  enabledS?.value === "true",
-    topCount: parseInt(topS?.value || "3"),
-    connected: getBotStatus(),
-  });
+
+// ── Custom Emotes ──
+
+// GET /api/admin/emotes
+router.get("/emotes", async (_req: Request, res: Response) => {
+  const emotes = await prisma.customEmote.findMany({ orderBy: { createdAt: "desc" } });
+  res.json(emotes);
 });
 
-// POST /api/admin/settings/bot — ativa/desativa e configura
-router.post("/settings/bot", async (req: Request, res: Response) => {
-  const { enabled, topCount } = req.body as { enabled: boolean; topCount: number };
-  const { startBot, stopBot } = await import("../lib/twitchBot");
+// POST /api/admin/emotes — criar emote (upload ou URL externa)
+router.post("/emotes", uploadMemory.single("image"), async (req: Request, res: Response) => {
+  const { name, imageUrl } = req.body as { name: string; imageUrl?: string };
 
-  await Promise.all([
-    prisma.setting.upsert({
-      where:  { key: "bot_enabled" },
-      update: { value: enabled ? "true" : "false" },
-      create: { key: "bot_enabled", value: enabled ? "true" : "false" },
-    }),
-    prisma.setting.upsert({
-      where:  { key: "bot_top_count" },
-      update: { value: String(topCount || 3) },
-      create: { key: "bot_top_count", value: String(topCount || 3) },
-    }),
-  ]);
+  if (!name?.trim()) return res.status(400).json({ error: "Nome é obrigatório" });
 
-  if (enabled) await startBot();
-  else await stopBot();
+  let finalUrl = imageUrl?.trim() || "";
 
-  res.json({ success: true, enabled, topCount: topCount || 3 });
+  if (req.file) {
+    try {
+      finalUrl = await uploadEmote(req.file.originalname, req.file.buffer, req.file.mimetype);
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  if (!finalUrl) return res.status(400).json({ error: "Envie uma imagem ou informe uma URL" });
+
+  try {
+    const emote = await prisma.customEmote.create({
+      data: { id: require("crypto").randomUUID(), name: name.trim(), imageUrl: finalUrl },
+    });
+    res.status(201).json(emote);
+  } catch {
+    res.status(409).json({ error: "Já existe um emote com esse nome" });
+  }
+});
+
+// DELETE /api/admin/emotes/:id
+router.delete("/emotes/:id", async (req: Request, res: Response) => {
+  const emote = await prisma.customEmote.findUnique({ where: { id: req.params.id } });
+  if (!emote) return res.status(404).json({ error: "Emote não encontrado" });
+
+  // Tenta remover do Supabase se for URL do bucket
+  if (emote.imageUrl.includes("supabase")) {
+    await deleteEmote(emote.imageUrl).catch(() => {});
+  }
+
+  await prisma.customEmote.delete({ where: { id: req.params.id } });
+  res.json({ success: true });
+});
+
+// PATCH /api/admin/emotes/:id/toggle — ativa/desativa
+router.patch("/emotes/:id/toggle", async (req: Request, res: Response) => {
+  const emote = await prisma.customEmote.findUnique({ where: { id: req.params.id } });
+  if (!emote) return res.status(404).json({ error: "Emote não encontrado" });
+
+  const updated = await prisma.customEmote.update({
+    where: { id: req.params.id },
+    data:  { active: !emote.active },
+  });
+  res.json(updated);
 });
 
 // GET /api/admin/settings/reactions — status atual

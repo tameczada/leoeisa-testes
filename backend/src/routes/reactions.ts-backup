@@ -24,31 +24,23 @@ router.get("/", async (req: Request, res: Response) => {
     return res.json({ enabled: false, data: {} });
   }
 
-  // Busca todas as reações ordenadas por createdAt pra preservar ordem de inserção
-  const all = await prisma.reaction.findMany({
-    orderBy: { createdAt: "asc" },
-    select:  { movieId: true, emoji: true, userId: true },
+  const raw = await prisma.reaction.groupBy({
+    by: ["movieId", "emoji"],
+    _count: { emoji: true },
   });
 
-  // Monta counts mantendo ordem de primeira aparição do emoji por filme
+  // Monta { movieId: { emoji: count } }
   const counts: Record<string, Record<string, number>> = {};
-  const emojiOrder: Record<string, string[]> = {}; // movieId -> emojis em ordem de inserção
-
-  for (const r of all) {
-    if (!counts[r.movieId]) { counts[r.movieId] = {}; emojiOrder[r.movieId] = []; }
-    if (!counts[r.movieId][r.emoji]) {
-      counts[r.movieId][r.emoji] = 0;
-      emojiOrder[r.movieId].push(r.emoji);
-    }
-    counts[r.movieId][r.emoji]++;
+  for (const r of raw) {
+    if (!counts[r.movieId]) counts[r.movieId] = {};
+    counts[r.movieId][r.emoji] = r._count.emoji;
   }
 
   let userReactions: Record<string, string[]> = {};
   if (req.session.userId) {
     const mine = await prisma.reaction.findMany({
-      where:   { userId: req.session.userId },
-      orderBy: { createdAt: "asc" },
-      select:  { movieId: true, emoji: true },
+      where: { userId: req.session.userId },
+      select: { movieId: true, emoji: true },
     });
     for (const r of mine) {
       if (!userReactions[r.movieId]) userReactions[r.movieId] = [];
@@ -56,7 +48,7 @@ router.get("/", async (req: Request, res: Response) => {
     }
   }
 
-  res.json({ enabled: true, counts, userReactions, emojiOrder });
+  res.json({ enabled: true, counts, userReactions });
 });
 
 // GET /api/reactions/:movieId — busca contagens e reações do usuário
@@ -70,32 +62,26 @@ router.get("/:movieId", async (req: Request, res: Response) => {
   }
 
   // Agrupa contagem por emoji
-  const all = await prisma.reaction.findMany({
-    where:   { movieId },
-    orderBy: { createdAt: "asc" },
-    select:  { emoji: true, userId: true },
+  const raw = await prisma.reaction.groupBy({
+    by: ["emoji"],
+    where: { movieId },
+    _count: { emoji: true },
   });
 
   const counts: Record<string, number> = {};
-  const emojiOrder: string[] = [];
-  for (const r of all) {
-    if (!counts[r.emoji]) { counts[r.emoji] = 0; emojiOrder.push(r.emoji); }
-    counts[r.emoji]++;
-  }
-  // Remove duplicatas mantendo primeira ocorrência
-  const orderedUnique = emojiOrder.filter((e, i) => emojiOrder.indexOf(e) === i);
+  for (const r of raw) counts[r.emoji] = r._count.emoji;
 
+  // Reações do usuário atual
   let userReactions: string[] = [];
   if (req.session.userId) {
     const mine = await prisma.reaction.findMany({
-      where:   { movieId, userId: req.session.userId },
-      orderBy: { createdAt: "asc" },
-      select:  { emoji: true },
+      where: { movieId, userId: req.session.userId },
+      select: { emoji: true },
     });
     userReactions = mine.map((r) => r.emoji);
   }
 
-  res.json({ enabled: true, counts, userReactions, emojiOrder: orderedUnique });
+  res.json({ enabled: true, counts, userReactions });
 });
 
 // POST /api/reactions/:movieId — adiciona ou remove reação (toggle)
@@ -132,25 +118,19 @@ router.post("/:movieId", requireAuth, async (req: Request, res: Response) => {
     await prisma.reaction.create({ data: { userId, movieId, emoji } });
   }
 
-  // Retorna contagem atualizada com ordem preservada
-  const allReactions = await prisma.reaction.findMany({
-    where:   { movieId },
-    orderBy: { createdAt: "asc" },
-    select:  { emoji: true },
+  // Retorna contagem atualizada
+  const raw = await prisma.reaction.groupBy({
+    by: ["emoji"],
+    where: { movieId },
+    _count: { emoji: true },
   });
 
   const counts: Record<string, number> = {};
-  const emojiOrder: string[] = [];
-  for (const r of allReactions) {
-    if (!counts[r.emoji]) { counts[r.emoji] = 0; emojiOrder.push(r.emoji); }
-    counts[r.emoji]++;
-  }
-  const orderedUnique = emojiOrder.filter((e, i) => emojiOrder.indexOf(e) === i);
+  for (const r of raw) counts[r.emoji] = r._count.emoji;
 
   const mine = await prisma.reaction.findMany({
-    where:   { movieId, userId },
-    orderBy: { createdAt: "asc" },
-    select:  { emoji: true },
+    where: { movieId, userId },
+    select: { emoji: true },
   });
 
   // ── Log ──
@@ -161,7 +141,7 @@ router.post("/:movieId", requireAuth, async (req: Request, res: Response) => {
     meta: { emoji, removed: !!existing },
   });
 
-  res.json({ counts, userReactions: mine.map((r) => r.emoji), emojiOrder: orderedUnique });
+  res.json({ counts, userReactions: mine.map((r) => r.emoji) });
 });
 
 export default router;

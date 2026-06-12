@@ -17,7 +17,6 @@ import moviesRouter from "./routes/movies";
 import adminRouter from "./routes/admin";
 import pagesRouter from "./routes/pages";
 import reactionsRouter from "./routes/reactions";
-import { startBot } from "./lib/twitchBot";
 
 const app = express();
 const PORT = parseInt(process.env.PORT || "3000", 10);
@@ -163,8 +162,6 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`\n🎬  CineVote running on http://cinevote.onrender.com`);
   console.log(`   ENV: ${process.env.NODE_ENV || "development"}\n`);
-  // Inicia o bot do Twitch se configurado
-  startBot().catch((err) => console.error("[bot] Erro ao iniciar:", err));
 });
 
 export default app;

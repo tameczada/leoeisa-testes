@@ -76,6 +76,15 @@
 }
 .btn-warn:hover { background: rgba(245,158,11,.2); }
 .btn-sm { padding: .38rem .75rem !important; font-size: .78rem !important; border-radius: 7px !important; }
+
+.sort-btn {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .38rem .7rem; border-radius: 8px; font-size: .75rem; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--muted);
+  cursor: pointer; transition: all .18s; font-family: inherit; white-space: nowrap;
+}
+.sort-btn:hover { border-color: var(--border2); color: var(--text); }
+.sort-btn.active { background: rgba(145,71,255,.12); border-color: rgba(145,71,255,.35); color: var(--twitch); }
 .btn-cancel {
   background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px;
   padding: .55rem 1.2rem; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: .87rem; transition: all .2s;

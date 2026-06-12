@@ -79,6 +79,7 @@
       </button>
     </div>
 
+
     <div class="action-row">
       <button class="btn-danger" data-action="reset-all">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -223,10 +224,9 @@
 
     <!-- ═══ SETTINGS ═══ -->
     <% if (activeTab === 'settings') { %>
-    <div class="section-title">CINEVOTE</div>
+    <div class="section-title">Enquete</div>
     <div class="form-grid" style="max-width:600px;margin-bottom:2rem;">
-      <!-- COMENTADO FUNCAO NAO ATIVE -->
-      <!--<div class="form-group form-full">
+      <div class="form-group form-full">
         <label>Permitir votação múltipla</label>
         <div style="display:flex;align-items:center;gap:.8rem;margin-top:.2rem;">
           <label class="toggle-switch">
@@ -244,9 +244,9 @@
         </div>
         <p style="font-size:.73rem;color:var(--muted);margin-top:.5rem;">Controle granular de estado ainda nao ativo,em breve.</p>
       </div>
-    </div>-->
+    </div>
 
-    <div class="section-title">Emotes Customizados</div>
+    <div class="section-title">Emotes Customizados (EM BREVE ,NAO FUNCIONAL)</div>
     <div style="max-width:600px;margin-bottom:2rem;">
 
       <!-- Formulário adicionar emote -->
@@ -274,7 +274,7 @@
 
     <div class="section-title">Banco de Dados</div>
     <div class="action-row" style="margin-bottom:2rem;">
-      <button class="btn-ghost" data-action="exportMovieBtn">
+      <button class="btn-ghost" onclick="exportJson()">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
         Exportar filmes (JSON)
       </button>
@@ -338,10 +338,10 @@ async function loadEmotes() {
       <img src="${e.imageUrl}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;" alt="${e.name}">
       <span style="flex:1;font-size:.83rem;font-weight:600;">${e.name}</span>
       <span style="font-size:.72rem;color:${e.active ? '#4ade80' : 'var(--muted)'};">${e.active ? 'Ativo' : 'Inativo'}</span>
-      <button class="emote-toggle-btn" data-id="${e.id}" style="padding:.28rem .6rem;border-radius:6px;border:1px solid var(--border);background:var(--surface3);color:var(--muted);font-size:.72rem;cursor:pointer;font-family:inherit;">
+      <button onclick="toggleEmote('${e.id}')" style="padding:.28rem .6rem;border-radius:6px;border:1px solid var(--border);background:var(--surface3);color:var(--muted);font-size:.72rem;cursor:pointer;font-family:inherit;">
         ${e.active ? 'Desativar' : 'Ativar'}
       </button>
-      <button class="emote-delete-btn" data-id="${e.id}" data-name="${e.name}" style="padding:.28rem .6rem;border-radius:6px;border:1px solid rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#f87171;font-size:.72rem;cursor:pointer;font-family:inherit;">
+      <button onclick="deleteEmote('${e.id}', '${e.name}')" style="padding:.28rem .6rem;border-radius:6px;border:1px solid rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#f87171;font-size:.72rem;cursor:pointer;font-family:inherit;">
         Remover
       </button>
     </div>
@@ -354,30 +354,11 @@ async function toggleEmote(id) {
 }
 
 async function deleteEmote(id, name) {
+  if (!confirm(`Remover emote "${name}"?`)) return;
   await fetch(`/api/admin/emotes/${id}`, { method: 'DELETE' });
   loadEmotes();
-  showToast(`Emote "${name}" removido.`);
+  showToast(`Emote "${name}" removido.`, 'warn');
 }
-
-// Delegação de eventos pros botões de emote
-document.addEventListener('click', function(e) {
-  var toggleBtn = e.target.closest('.emote-toggle-btn');
-  if (toggleBtn) {
-    toggleEmote(toggleBtn.getAttribute('data-id'));
-    return;
-  }
-
-  var deleteBtn = e.target.closest('.emote-delete-btn');
-  if (deleteBtn) {
-    var id   = deleteBtn.getAttribute('data-id');
-    var name = deleteBtn.getAttribute('data-name');
-    showConfirm(
-      'Remover emote',
-      `Remover o emote "${name}"? Esta ação não pode ser desfeita.`,
-      function() { deleteEmote(id, name); }
-    );
-  }
-});
 
 const btnAddEmote = document.getElementById('btnAddEmote');
 if (btnAddEmote) {
@@ -421,7 +402,6 @@ if (movieSearch) {
   });
 }
   // ── Reactions toggle ──
-
   function setToggleUI(enabled) {
     var btn   = document.getElementById('reactionsToggle');
     var thumb = document.getElementById('reactionsThumb');
@@ -476,23 +456,6 @@ if (movieSearch) {
   <a href="/admin/users" class="">
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
     Usuários
-  </a>
-    <a href="/admin?tab=settings" class="">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-  <path
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="2"
-    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.757.426 1.757 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.757-2.924 1.757-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.757-.426-1.757-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-  />
-  <path
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="2"
-    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-  />
-</svg>
-    Config..
   </a>
   <a href="/" class="">
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>

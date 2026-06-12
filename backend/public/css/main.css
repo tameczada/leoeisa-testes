@@ -252,6 +252,71 @@ header {
 .empty svg { width: 52px; height: 52px; margin-bottom: 1rem; opacity: .25; display: block; margin-inline: auto; }
 .grid.list-view .empty { grid-column: 1/-1; }
 
+/* ── Compact view ── */
+.grid.compact-view {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: .7rem;
+}
+.grid.compact-view .card-poster { aspect-ratio: 2/3; }
+.grid.compact-view .card-body { padding: .6rem .75rem; }
+.grid.compact-view .card-title { font-size: .8rem; margin-bottom: .2rem; -webkit-line-clamp: 2; }
+.grid.compact-view .card-description { display: none; }
+.grid.compact-view .card-meta { font-size: .68rem; margin-bottom: .4rem; }
+.grid.compact-view .progress-wrap { margin-bottom: .5rem; }
+.grid.compact-view .progress-info { font-size: .68rem; }
+.grid.compact-view .btn-vote { padding: .35rem .6rem; font-size: .75rem; }
+.grid.compact-view .reactions-wrap { padding-top: .3rem; }
+.grid.compact-view .empty { grid-column: 1/-1; }
+
+@media (max-width: 520px) {
+  .grid.compact-view { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .5rem; }
+}
+
+/* ── Ranking view ── */
+.grid.ranking-view {
+  grid-template-columns: 1fr;
+  gap: .5rem;
+}
+.grid.ranking-view .card {
+  display: flex; flex-direction: row; align-items: stretch;
+  transform: none !important; border-radius: 10px;
+}
+.grid.ranking-view .card:nth-child(1) { border-color: rgba(255,199,0,.35); background: linear-gradient(90deg, rgba(255,199,0,.06) 0%, var(--surface) 40%); }
+.grid.ranking-view .card:nth-child(2) { border-color: rgba(180,180,180,.3); background: linear-gradient(90deg, rgba(180,180,180,.05) 0%, var(--surface) 40%); }
+.grid.ranking-view .card:nth-child(3) { border-color: rgba(205,127,50,.3); background: linear-gradient(90deg, rgba(205,127,50,.05) 0%, var(--surface) 40%); }
+.grid.ranking-view .card-poster {
+  width: 60px; min-width: 60px; aspect-ratio: unset;
+  flex-shrink: 0; border-radius: 0;
+}
+.grid.ranking-view .card-poster img { height: 100%; object-fit: cover; }
+.grid.ranking-view .card-badge { display: none; }
+.grid.ranking-view .card-rank {
+  position: static; background: none; padding: 0;
+  font-size: 1.1rem; font-weight: 900; color: var(--muted);
+  min-width: 2.2rem; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; border-right: 1px solid var(--border);
+}
+.grid.ranking-view .card:nth-child(1) .card-rank { color: #ffc700; font-size: 1.3rem; }
+.grid.ranking-view .card:nth-child(2) .card-rank { color: #b4b4b4; }
+.grid.ranking-view .card:nth-child(3) .card-rank { color: #cd7f32; }
+.grid.ranking-view .card-body {
+  flex: 1; display: flex; align-items: center;
+  gap: .75rem; padding: .55rem .9rem; flex-wrap: wrap;
+}
+.grid.ranking-view .card-title { font-size: .85rem; flex: 1; min-width: 100px; margin-bottom: 0; }
+.grid.ranking-view .card-description { display: none; }
+.grid.ranking-view .card-meta { font-size: .7rem; margin-bottom: 0; white-space: nowrap; }
+.grid.ranking-view .progress-wrap { flex: 1; min-width: 120px; margin-bottom: 0; }
+.grid.ranking-view .btn-vote { width: auto; padding: .38rem .85rem; flex-shrink: 0; }
+.grid.ranking-view .reactions-wrap { flex-basis: 100%; padding-top: .3rem; }
+.grid.ranking-view .empty { grid-column: 1/-1; }
+
+@media (max-width: 520px) {
+  .grid.ranking-view .card-poster { width: 50px; min-width: 50px; }
+  .grid.ranking-view .card-rank { min-width: 1.8rem; font-size: .95rem; }
+  .grid.ranking-view .progress-wrap { flex-basis: 100%; }
+  .grid.ranking-view .btn-vote { flex-basis: 100%; justify-content: center; }
+}
 
 .card {
   background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
