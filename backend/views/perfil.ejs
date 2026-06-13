@@ -38,6 +38,20 @@
   .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--twitch); line-height: 1; }
   .stat-label { font-size: .72rem; color: var(--muted); margin-top: .3rem; text-transform: uppercase; letter-spacing: .8px; }
 
+  /* Badges */
+  .badges-grid { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1.8rem; }
+  .badge-item {
+    display: flex; align-items: center; gap: .5rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: .5rem .85rem;
+    transition: border-color .18s;
+  }
+  .badge-item:hover { border-color: var(--twitch); }
+  .badge-icon { font-size: 1.3rem; line-height: 1; }
+  .badge-info { }
+  .badge-label { font-size: .82rem; font-weight: 700; }
+  .badge-desc  { font-size: .7rem; color: var(--muted); }
+
   /* Seções */
   .perfil-section { margin-bottom: 1.8rem; }
   .perfil-section-title {
@@ -120,6 +134,24 @@
       <div class="stat-label">Ranking</div>
     </div>
   </div>
+
+  <!-- Badges -->
+  <% if (badges.length > 0) { %>
+  <div class="perfil-section">
+    <div class="perfil-section-title">Conquistas</div>
+    <div class="badges-grid">
+      <% badges.forEach(function(badge) { %>
+      <div class="badge-item">
+        <span class="badge-icon"><%= badge.icon %></span>
+        <div class="badge-info">
+          <div class="badge-label"><%= badge.label %></div>
+          <div class="badge-desc"><%= badge.desc %></div>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+  </div>
+  <% } %>
 
   <!-- Filmes votados -->
   <div class="perfil-section">

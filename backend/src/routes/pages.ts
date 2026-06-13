@@ -263,6 +263,46 @@ router.get("/perfil", async (req: Request, res: Response) => {
     imageUrl:   customMap.get(r.emoji) || null,
   }));
 
+  // ── Badges automáticas ──
+  interface Badge { icon: string; label: string; desc: string; }
+  const badges: Badge[] = [];
+
+  const totalVotes     = votes.length;
+  const totalReactions = reactions.length;
+
+  // Primeiro voto
+  if (totalVotes >= 1)
+    badges.push({ icon: "🗳️", label: "Primeiro Voto", desc: "Votou pela primeira vez" });
+
+  // Votante Ativo — 10 votos
+  if (totalVotes >= 10)
+    badges.push({ icon: "🔥", label: "Votante Ativo", desc: "Votou em 10 ou mais filmes" });
+
+  // Fanático — 25 votos
+  if (totalVotes >= 25)
+    badges.push({ icon: "👑", label: "Fanático", desc: "Votou em 25 ou mais filmes" });
+
+  // Reativo — 10 reações
+  if (totalReactions >= 10)
+    badges.push({ icon: "😀", label: "Reativo", desc: "Deu 10 ou mais reações" });
+
+  // Expressivo — 50 reações
+  if (totalReactions >= 50)
+    badges.push({ icon: "🎭", label: "Expressivo", desc: "Deu 50 ou mais reações" });
+
+  // Pioneiro — um dos primeiros 10 usuários
+  const allUsersOrdered = await prisma.user.findMany({
+    orderBy: { createdAt: "asc" },
+    take: 10,
+    select: { id: true },
+  });
+  if (allUsersOrdered.some((u) => u.id === userId))
+    badges.push({ icon: "⭐", label: "Pioneiro", desc: "Um dos primeiros 10 usuários do site" });
+
+  // Líder — 1º no ranking
+  if (ranking === 1)
+    badges.push({ icon: "🏆", label: "Líder", desc: "Está em 1º lugar no ranking de votos" });
+
   res.render("perfil", {
     user: {
       ...user,
@@ -273,11 +313,12 @@ router.get("/perfil", async (req: Request, res: Response) => {
       isAdmin:      user.isAdmin,
       createdAt:    user.createdAt,
     },
-    totalVotes:     votes.length,
-    totalReactions: reactions.length,
+    totalVotes,
+    totalReactions,
     ranking,
     votedMovies:    votes,
     reactions:      enrichedReactions,
+    badges,
   });
 });
 
